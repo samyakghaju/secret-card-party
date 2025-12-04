@@ -2,8 +2,10 @@ import { useState, useCallback } from "react";
 import { SetupScreen } from "@/components/game/SetupScreen";
 import { RoleRevealScreen } from "@/components/game/RoleRevealScreen";
 import { GameComplete } from "@/components/game/GameComplete";
+import { GameHistory } from "@/components/game/GameHistory";
+import { saveGame } from "@/lib/gameHistory";
 
-type GamePhase = "setup" | "reveal" | "complete";
+type GamePhase = "setup" | "reveal" | "complete" | "history";
 
 interface Player {
   name: string;
@@ -25,19 +27,14 @@ const Index = () => {
   };
 
   const handleStartGame = useCallback((playerNames: string[], numMafia: number) => {
-    // Create roles array
     const roles: ("mafia" | "civilian")[] = [
       ...Array(numMafia).fill("mafia"),
       ...Array(playerNames.length - numMafia).fill("civilian"),
     ];
 
-    // Shuffle roles
     const shuffledRoles = shuffleArray(roles);
-
-    // Shuffle player order for reveal
     const shuffledNames = shuffleArray(playerNames);
 
-    // Assign roles to shuffled players
     const assignedPlayers: Player[] = shuffledNames.map((name, index) => ({
       name,
       role: shuffledRoles[index],
@@ -49,8 +46,10 @@ const Index = () => {
   }, []);
 
   const handleGameEnd = useCallback(() => {
+    // Save game to history
+    saveGame(players);
     setGamePhase("complete");
-  }, []);
+  }, [players]);
 
   const handlePlayAgain = useCallback(() => {
     setPlayers([]);
@@ -58,10 +57,18 @@ const Index = () => {
     setGamePhase("setup");
   }, []);
 
+  const handleShowHistory = useCallback(() => {
+    setGamePhase("history");
+  }, []);
+
+  const handleCloseHistory = useCallback(() => {
+    setGamePhase("setup");
+  }, []);
+
   return (
     <main className="min-h-screen">
       {gamePhase === "setup" && (
-        <SetupScreen onStartGame={handleStartGame} />
+        <SetupScreen onStartGame={handleStartGame} onShowHistory={handleShowHistory} />
       )}
       {gamePhase === "reveal" && (
         <RoleRevealScreen players={players} onGameEnd={handleGameEnd} />
@@ -72,6 +79,9 @@ const Index = () => {
           mafiaCount={mafiaCount}
           onPlayAgain={handlePlayAgain}
         />
+      )}
+      {gamePhase === "history" && (
+        <GameHistory onClose={handleCloseHistory} />
       )}
     </main>
   );

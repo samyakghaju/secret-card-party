@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PaperCard } from "./PaperCard";
 import { Eye, EyeOff, ArrowRight, RotateCcw } from "lucide-react";
+import { soundManager } from "@/lib/sounds";
 
 interface Player {
   name: string;
@@ -16,23 +17,31 @@ interface RoleRevealScreenProps {
 export const RoleRevealScreen = ({ players, onGameEnd }: RoleRevealScreenProps) => {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [hasViewed, setHasViewed] = useState(false);
 
   const currentPlayer = players[currentPlayerIndex];
   const isLastPlayer = currentPlayerIndex === players.length - 1;
 
   const handleReveal = () => {
+    soundManager.playReveal();
     setIsRevealed(true);
-    setHasViewed(true);
+    
+    // Play role-specific sound after a short delay
+    setTimeout(() => {
+      if (currentPlayer.role === "mafia") {
+        soundManager.playMafiaReveal();
+      } else {
+        soundManager.playCivilianReveal();
+      }
+    }, 300);
   };
 
   const handleNext = () => {
+    soundManager.playClick();
     if (isLastPlayer) {
       onGameEnd();
     } else {
       setCurrentPlayerIndex(currentPlayerIndex + 1);
       setIsRevealed(false);
-      setHasViewed(false);
     }
   };
 
@@ -108,7 +117,7 @@ export const RoleRevealScreen = ({ players, onGameEnd }: RoleRevealScreenProps) 
                 {isLastPlayer ? (
                   <>
                     <RotateCcw size={20} />
-                    Start New Game
+                    Continue
                   </>
                 ) : (
                   <>

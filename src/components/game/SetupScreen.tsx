@@ -1,28 +1,33 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash2, Users, Skull } from "lucide-react";
+import { Plus, Minus, Trash2, Users, Skull, History, Volume2, VolumeX } from "lucide-react";
+import { soundManager } from "@/lib/sounds";
 
 interface SetupScreenProps {
   onStartGame: (players: string[], mafiaCount: number) => void;
+  onShowHistory: () => void;
 }
 
-export const SetupScreen = ({ onStartGame }: SetupScreenProps) => {
+export const SetupScreen = ({ onStartGame, onShowHistory }: SetupScreenProps) => {
   const [players, setPlayers] = useState<string[]>([""]);
   const [mafiaCount, setMafiaCount] = useState(1);
   const [newPlayerName, setNewPlayerName] = useState("");
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const validPlayers = players.filter((p) => p.trim() !== "");
   const maxMafia = Math.max(1, Math.floor(validPlayers.length / 2) - 1);
 
   const addPlayer = () => {
     if (newPlayerName.trim()) {
+      soundManager.playClick();
       setPlayers([...players.filter((p) => p.trim() !== ""), newPlayerName.trim()]);
       setNewPlayerName("");
     }
   };
 
   const removePlayer = (index: number) => {
+    soundManager.playClick();
     const newPlayers = validPlayers.filter((_, i) => i !== index);
     setPlayers(newPlayers.length > 0 ? newPlayers : [""]);
     if (mafiaCount > Math.max(1, Math.floor(newPlayers.length / 2) - 1)) {
@@ -36,16 +41,53 @@ export const SetupScreen = ({ onStartGame }: SetupScreenProps) => {
     }
   };
 
+  const toggleSound = () => {
+    const newState = !soundEnabled;
+    setSoundEnabled(newState);
+    soundManager.setEnabled(newState);
+    if (newState) {
+      soundManager.playClick();
+    }
+  };
+
   const canStartGame = validPlayers.length >= 3 && mafiaCount > 0 && mafiaCount < validPlayers.length;
+
+  const handleStartGame = () => {
+    soundManager.playGameStart();
+    onStartGame(validPlayers, mafiaCount);
+  };
 
   return (
     <div className="min-h-screen flex flex-col px-4 py-8 max-w-md mx-auto">
       {/* Header */}
-      <div className="text-center mb-8 animate-slide-up">
-        <h1 className="font-display text-4xl font-bold text-foreground mb-2 tracking-tight">
-          Secret <span className="text-primary">Mafia</span>
-        </h1>
-        <p className="text-muted-foreground text-sm">Who can you trust?</p>
+      <div className="text-center mb-6 animate-slide-up">
+        <div className="flex justify-between items-start mb-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              soundManager.playClick();
+              onShowHistory();
+            }}
+            className="text-muted-foreground"
+          >
+            <History size={20} />
+          </Button>
+          <div>
+            <h1 className="font-display text-4xl font-bold text-foreground tracking-tight">
+              Secret <span className="text-primary">Mafia</span>
+            </h1>
+            <p className="text-muted-foreground text-sm">Who can you trust?</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSound}
+            className="text-muted-foreground"
+          >
+            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </Button>
+        </div>
       </div>
 
       {/* Player Input Section */}
@@ -108,7 +150,10 @@ export const SetupScreen = ({ onStartGame }: SetupScreenProps) => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setMafiaCount(Math.max(1, mafiaCount - 1))}
+                onClick={() => {
+                  soundManager.playClick();
+                  setMafiaCount(Math.max(1, mafiaCount - 1));
+                }}
                 disabled={mafiaCount <= 1}
               >
                 <Minus size={20} />
@@ -121,7 +166,10 @@ export const SetupScreen = ({ onStartGame }: SetupScreenProps) => {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setMafiaCount(Math.min(maxMafia, mafiaCount + 1))}
+                onClick={() => {
+                  soundManager.playClick();
+                  setMafiaCount(Math.min(maxMafia, mafiaCount + 1));
+                }}
                 disabled={mafiaCount >= maxMafia}
               >
                 <Plus size={20} />
@@ -142,7 +190,7 @@ export const SetupScreen = ({ onStartGame }: SetupScreenProps) => {
           size="xl"
           className="w-full"
           disabled={!canStartGame}
-          onClick={() => onStartGame(validPlayers, mafiaCount)}
+          onClick={handleStartGame}
         >
           Start Game
         </Button>
