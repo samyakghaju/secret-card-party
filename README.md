@@ -1,4 +1,5 @@
 <img width="1024" height="576" alt="MAFIA" src="https://github.com/user-attachments/assets/4710f7b9-f60a-4a00-8ea8-3df818ce6d2d" />
+
 # 🎭 Secret Card Party – One-Phone Mafia Game
 
 Secret Card Party is a simple **one-device Mafia game**.  
