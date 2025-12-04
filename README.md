@@ -1,4 +1,5 @@
-<img width="1919" height="853" alt="image" src="https://github.com/user-attachments/assets/a1a26f1e-bff9-44fe-9c81-d9725ca24687" /># 🎭 Secret Card Party – One-Phone Mafia Game
+<img width="1024" height="576" alt="MAFIA" src="https://github.com/user-attachments/assets/4710f7b9-f60a-4a00-8ea8-3df818ce6d2d" />
+# 🎭 Secret Card Party – One-Phone Mafia Game
 
 Secret Card Party is a simple **one-device Mafia game**.  
 Players sit together in real life, and the phone handles roles, night/day phases, and voting.
@@ -11,12 +12,11 @@ Players sit together in real life, and the phone handles roles, night/day phases
 > Replace these links with real images when you upload them.
 
 ### Home Screen
-![Home Screen](<img width="1919" height="853" alt="image" src="https://github.com/user-attachments/assets/939dfba8-8e12-4bf3-841a-181ca598dca9" />
-)
+<img width="1919" height="853" alt="image" src="https://github.com/user-attachments/assets/939dfba8-8e12-4bf3-841a-181ca598dca9" />
+
 
 ### Role Distribution Screen
-![Role Distribution](<img width="1919" height="861" alt="image (1)" src="https://github.com/user-attachments/assets/1456b2e9-1dd1-4352-9cdf-51d7831cf9a6" />
-)
+<img width="1919" height="861" alt="image (1)" src="https://github.com/user-attachments/assets/1456b2e9-1dd1-4352-9cdf-51d7831cf9a6" />
 
 ### Night Phase
 - Will be added soon
