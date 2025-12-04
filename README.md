@@ -1,25 +1,54 @@
-# Secret-Card-Party
+# 🎭 Secret Card Party – One-Phone Mafia Game
 
-## 🚀 What is this  
-Secret-Card-Party is a web-based card game / party-game website where players can join and enjoy a fun group experience online.
+Secret Card Party is a simple **one-device Mafia game**.  
+Players sit together in real life, and the phone handles roles, night/day phases, and voting.
 
-## 🔧 Features  
-- Simple web interface for playing cardiac-style or party card games  
-- Easy to access via browser — no installation needed  
-- Multiplayer / group-friendly design  
+🔗 **Live Website:** https://secret-card-party.lovable.app/
 
-## 🛠️ How to run locally / Setup  
-*(If applicable — adjust according to your project setup)*
+---
+
+## 📸 Screenshots  
+> Replace these links with real images when you upload them.
+
+### Home Screen
+![Home Screen](https://ibb.co/v4kmmy4n)
+
+### Role Distribution Screen
+![Role Distribution](https://ibb.co/bj1mx1Rd)
+
+### Night Phase
+- Will be added soon
+
+### Voting Phase
+- Will be added soon
+
+---
+
+## 🎮 How It Works
+
+- Everyone sits around a table in real life  
+- Pass the phone to each player to see their secret role  
+- The game runs Night → Day → Voting automatically  
+- The phone shows instructions so the group can play smoothly  
+- No accounts, no login, only one device needed  
+
+---
+
+## 🧩 Features
+
+- ✔️ One-phone game (perfect for parties)  
+- ✔️ Roles revealed privately  
+- ✔️ Automated night actions  
+- ✔️ Simple voting system  
+- ✔️ Clean and fast interface  
+- ✔️ Works on any phone browser  
+
+---
+
+## 🚀 Run Locally
 
 ```bash
-# Clone the repo
 git clone https://github.com/your-username/secret-card-party.git
-
-# Go into project
 cd secret-card-party
-
-# Install dependencies (if using e.g. npm / yarn)
 npm install
-
-# Start the development server
 npm start
