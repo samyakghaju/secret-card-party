@@ -10,8 +10,6 @@ Players sit together in real life, and the phone handles roles, night/day phases
 ---
 
 ## 📸 Screenshots  
-> Replace these links with real images when you upload them.
-
 ### Home Screen
 <img width="1919" height="853" alt="image" src="https://github.com/user-attachments/assets/939dfba8-8e12-4bf3-841a-181ca598dca9" />
 
