@@ -1,4 +1,5 @@
 export type GameMode = "simple" | "advanced";
+export type GamePhase = "mode-select" | "setup" | "reveal" | "night-intro" | "night" | "day" | "voting" | "complete" | "history";
 
 export type SimpleRole = "mafia" | "civilian";
 export type AdvancedRole = "godfather" | "mafioso" | "doctor" | "detective" | "civilian";
@@ -11,8 +12,6 @@ export interface Player {
   isProtected?: boolean;
   isInvestigated?: boolean;
 }
-
-export type GamePhase = "setup" | "reveal" | "night-intro" | "night" | "day" | "voting" | "complete" | "history";
 
 export const ROLE_INFO: Record<Role, { title: string; description: string; team: "mafia" | "town" }> = {
   mafia: {
