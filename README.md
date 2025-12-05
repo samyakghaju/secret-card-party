@@ -29,7 +29,7 @@ Players sit together in real life, and the phone handles roles, night/day phases
 
 - Everyone sits around a table in real life  
 - Pass the phone to each player to see their secret role  
-- The game runs Night → Day → Voting automatically  
+- The game runs Night → Day → Voting automatically (In Advance Mode)
 - The phone shows instructions so the group can play smoothly  
 - No accounts, no login, only one device needed  
 
@@ -47,7 +47,6 @@ Players sit together in real life, and the phone handles roles, night/day phases
 ---
 
 ## 🚀 Run Locally
-
 ```bash
 git clone https://github.com/your-username/secret-card-party.git
 cd secret-card-party
