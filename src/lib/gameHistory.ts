@@ -1,9 +1,11 @@
+import { Role, isMafiaRole } from "./gameTypes";
+
 export interface GameRecord {
   id: string;
   date: string;
   players: {
     name: string;
-    role: "mafia" | "civilian";
+    role: Role;
   }[];
   mafiaCount: number;
   civilianCount: number;
@@ -28,7 +30,7 @@ export const getGameHistory = (): GameRecord[] => {
 };
 
 export const saveGame = (
-  players: { name: string; role: "mafia" | "civilian" }[]
+  players: { name: string; role: Role }[]
 ): GameRecord => {
   const history = getGameHistory();
   
@@ -36,8 +38,8 @@ export const saveGame = (
     id: Date.now().toString(),
     date: new Date().toISOString(),
     players,
-    mafiaCount: players.filter((p) => p.role === "mafia").length,
-    civilianCount: players.filter((p) => p.role === "civilian").length,
+    mafiaCount: players.filter((p) => isMafiaRole(p.role)).length,
+    civilianCount: players.filter((p) => !isMafiaRole(p.role)).length,
   };
 
   const updatedHistory = [newRecord, ...history].slice(0, 50); // Keep last 50 games
@@ -60,7 +62,7 @@ export const getPlayerStats = (): PlayerStats[] => {
       };
 
       existing.gamesPlayed++;
-      if (player.role === "mafia") {
+      if (isMafiaRole(player.role)) {
         existing.timesMafia++;
       } else {
         existing.timesCivilian++;

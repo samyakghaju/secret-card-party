@@ -1,14 +1,34 @@
 import { cn } from "@/lib/utils";
-import { Skull, Shield } from "lucide-react";
+import { Skull, Shield, Heart, Search, Crown, User } from "lucide-react";
+import { Role, ROLE_INFO, isMafiaRole } from "@/lib/gameTypes";
 
 interface PaperCardProps {
   playerName: string;
-  role: "mafia" | "civilian";
+  role: Role;
   revealed: boolean;
 }
 
+const getRoleIcon = (role: Role) => {
+  switch (role) {
+    case "godfather":
+      return Crown;
+    case "mafioso":
+    case "mafia":
+      return Skull;
+    case "doctor":
+      return Heart;
+    case "detective":
+      return Search;
+    case "civilian":
+    default:
+      return Shield;
+  }
+};
+
 export const PaperCard = ({ playerName, role, revealed }: PaperCardProps) => {
-  const isMafia = role === "mafia";
+  const isMafia = isMafiaRole(role);
+  const roleInfo = ROLE_INFO[role];
+  const Icon = getRoleIcon(role);
 
   return (
     <div
@@ -41,11 +61,7 @@ export const PaperCard = ({ playerName, role, revealed }: PaperCardProps) => {
                 : "bg-gradient-to-br from-civilian/20 to-civilian/40"
             )}
           >
-            {isMafia ? (
-              <Skull size={48} className="text-mafia" />
-            ) : (
-              <Shield size={48} className="text-civilian" />
-            )}
+            <Icon size={48} className={isMafia ? "text-mafia" : "text-civilian"} />
           </div>
 
           {/* Role Text */}
@@ -55,12 +71,15 @@ export const PaperCard = ({ playerName, role, revealed }: PaperCardProps) => {
             </p>
             <h2
               className={cn(
-                "font-display text-4xl font-bold tracking-tight",
+                "font-display text-3xl font-bold tracking-tight",
                 isMafia ? "text-mafia" : "text-civilian"
               )}
             >
-              {isMafia ? "MAFIA" : "CIVILIAN"}
+              {roleInfo.title.toUpperCase()}
             </h2>
+            <p className="text-xs text-ink/50 mt-2 max-w-[180px]">
+              {roleInfo.description}
+            </p>
           </div>
         </div>
 

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash2, Users, Skull, History, Volume2, VolumeX } from "lucide-react";
+import { Plus, Minus, Trash2, Users, Skull, History, Volume2, VolumeX, Sparkles, Zap } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
+import { GameMode } from "@/lib/gameTypes";
 
 interface SetupScreenProps {
-  onStartGame: (players: string[], mafiaCount: number) => void;
+  onStartGame: (players: string[], mafiaCount: number, gameMode: GameMode) => void;
   onShowHistory: () => void;
 }
 
@@ -14,6 +15,7 @@ export const SetupScreen = ({ onStartGame, onShowHistory }: SetupScreenProps) =>
   const [mafiaCount, setMafiaCount] = useState(1);
   const [newPlayerName, setNewPlayerName] = useState("");
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [gameMode, setGameMode] = useState<GameMode>("simple");
 
   const validPlayers = players.filter((p) => p.trim() !== "");
   const maxMafia = Math.max(1, Math.floor(validPlayers.length / 2) - 1);
@@ -50,11 +52,12 @@ export const SetupScreen = ({ onStartGame, onShowHistory }: SetupScreenProps) =>
     }
   };
 
-  const canStartGame = validPlayers.length >= 3 && mafiaCount > 0 && mafiaCount < validPlayers.length;
+  const minPlayers = gameMode === "advanced" ? 5 : 3;
+  const canStartGame = validPlayers.length >= minPlayers && mafiaCount > 0 && mafiaCount < validPlayers.length;
 
   const handleStartGame = () => {
     soundManager.playGameStart();
-    onStartGame(validPlayers, mafiaCount);
+    onStartGame(validPlayers, mafiaCount, gameMode);
   };
 
   return (
@@ -88,6 +91,43 @@ export const SetupScreen = ({ onStartGame, onShowHistory }: SetupScreenProps) =>
             {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </Button>
         </div>
+      </div>
+
+      {/* Game Mode Toggle */}
+      <div className="flex gap-2 mb-6 animate-slide-up">
+        <Button
+          variant={gameMode === "simple" ? "mafia" : "outline"}
+          className="flex-1"
+          onClick={() => {
+            soundManager.playClick();
+            setGameMode("simple");
+          }}
+        >
+          <Zap size={16} />
+          Simple
+        </Button>
+        <Button
+          variant={gameMode === "advanced" ? "mafia" : "outline"}
+          className="flex-1"
+          onClick={() => {
+            soundManager.playClick();
+            setGameMode("advanced");
+          }}
+        >
+          <Sparkles size={16} />
+          Advanced
+        </Button>
+      </div>
+
+      {/* Mode Description */}
+      <div className="bg-secondary/50 rounded-lg p-3 mb-6 text-xs text-muted-foreground animate-slide-up">
+        {gameMode === "simple" ? (
+          <p>Classic mode: Mafia vs Civilians with voting</p>
+        ) : (
+          <p>
+            <span className="text-primary font-medium">Special Roles:</span> Godfather, Mafioso, Doctor, Detective • Day/Night phases with abilities
+          </p>
+        )}
       </div>
 
       {/* Player Input Section */}
@@ -195,9 +235,9 @@ export const SetupScreen = ({ onStartGame, onShowHistory }: SetupScreenProps) =>
           Start Game
         </Button>
         
-        {validPlayers.length < 3 && (
+        {validPlayers.length < minPlayers && (
           <p className="text-center text-xs text-muted-foreground mt-2">
-            Add at least 3 players to start
+            Add at least {minPlayers} players to start {gameMode === "advanced" && "(for special roles)"}
           </p>
         )}
       </div>
