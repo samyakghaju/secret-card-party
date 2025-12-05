@@ -3,11 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PaperCard } from "./PaperCard";
 import { Eye, EyeOff, ArrowRight, RotateCcw } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
-
-interface Player {
-  name: string;
-  role: "mafia" | "civilian";
-}
+import { Player, isMafiaRole } from "@/lib/gameTypes";
 
 interface RoleRevealScreenProps {
   players: Player[];
@@ -20,6 +16,7 @@ export const RoleRevealScreen = ({ players, onGameEnd }: RoleRevealScreenProps) 
 
   const currentPlayer = players[currentPlayerIndex];
   const isLastPlayer = currentPlayerIndex === players.length - 1;
+  const isMafia = isMafiaRole(currentPlayer.role);
 
   const handleReveal = () => {
     soundManager.playReveal();
@@ -27,7 +24,7 @@ export const RoleRevealScreen = ({ players, onGameEnd }: RoleRevealScreenProps) 
     
     // Play role-specific sound after a short delay
     setTimeout(() => {
-      if (currentPlayer.role === "mafia") {
+      if (isMafia) {
         soundManager.playMafiaReveal();
       } else {
         soundManager.playCivilianReveal();
@@ -109,7 +106,7 @@ export const RoleRevealScreen = ({ players, onGameEnd }: RoleRevealScreenProps) 
               </p>
               
               <Button
-                variant={currentPlayer.role === "mafia" ? "mafia" : "civilian"}
+                variant={isMafia ? "mafia" : "civilian"}
                 size="xl"
                 onClick={handleNext}
                 className="w-full max-w-xs"

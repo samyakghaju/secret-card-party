@@ -171,6 +171,25 @@ class SoundManager {
       osc.stop(ctx.currentTime + 0.3 + i * 0.1);
     });
   }
+
+  // Night phase ambient
+  playNightSound() {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    
+    // Eerie low drone
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(100, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 1);
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 1);
+  }
 }
 
 export const soundManager = new SoundManager();
