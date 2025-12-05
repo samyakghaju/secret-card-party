@@ -18,10 +18,10 @@ Players sit together in real life, and the phone handles roles, night/day phases
 <img width="1919" height="861" alt="image (1)" src="https://github.com/user-attachments/assets/1456b2e9-1dd1-4352-9cdf-51d7831cf9a6" />
 
 ### Night Phase
-- Will be added soon
+<img width="1918" height="1078" alt="Screenshot 2025-12-05 071715" src="https://github.com/user-attachments/assets/19d6a296-2a40-43d9-8ff8-6d9cf644f290" />
 
 ### Voting Phase
-- Will be added soon
+<img width="1918" height="1078" alt="Screenshot 2025-12-05 071629" src="https://github.com/user-attachments/assets/2b8da7b7-c13a-418a-934d-af85294779c7" />
 
 ---
 
