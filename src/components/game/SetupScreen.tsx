@@ -1,21 +1,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash2, Users, Skull, History, Volume2, VolumeX, Sparkles, Zap } from "lucide-react";
+import { Plus, Minus, Trash2, Users, Skull, ArrowLeft } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
 import { GameMode } from "@/lib/gameTypes";
 
 interface SetupScreenProps {
-  onStartGame: (players: string[], mafiaCount: number, gameMode: GameMode) => void;
-  onShowHistory: () => void;
+  gameMode: GameMode;
+  onStartGame: (players: string[], mafiaCount: number) => void;
+  onBack: () => void;
 }
 
-export const SetupScreen = ({ onStartGame, onShowHistory }: SetupScreenProps) => {
+export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps) => {
   const [players, setPlayers] = useState<string[]>([""]);
   const [mafiaCount, setMafiaCount] = useState(1);
   const [newPlayerName, setNewPlayerName] = useState("");
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [gameMode, setGameMode] = useState<GameMode>("simple");
 
   const validPlayers = players.filter((p) => p.trim() !== "");
   const maxMafia = Math.max(1, Math.floor(validPlayers.length / 2) - 1);
@@ -43,21 +42,12 @@ export const SetupScreen = ({ onStartGame, onShowHistory }: SetupScreenProps) =>
     }
   };
 
-  const toggleSound = () => {
-    const newState = !soundEnabled;
-    setSoundEnabled(newState);
-    soundManager.setEnabled(newState);
-    if (newState) {
-      soundManager.playClick();
-    }
-  };
-
   const minPlayers = gameMode === "advanced" ? 5 : 3;
   const canStartGame = validPlayers.length >= minPlayers && mafiaCount > 0 && mafiaCount < validPlayers.length;
 
   const handleStartGame = () => {
     soundManager.playGameStart();
-    onStartGame(validPlayers, mafiaCount, gameMode);
+    onStartGame(validPlayers, mafiaCount);
   };
 
   return (
@@ -70,64 +60,20 @@ export const SetupScreen = ({ onStartGame, onShowHistory }: SetupScreenProps) =>
             size="icon"
             onClick={() => {
               soundManager.playClick();
-              onShowHistory();
+              onBack();
             }}
             className="text-muted-foreground"
           >
-            <History size={20} />
+            <ArrowLeft size={20} />
           </Button>
           <div>
-            <h1 className="font-display text-4xl font-bold text-foreground tracking-tight">
-              Secret <span className="text-primary">Mafia</span>
+            <h1 className="font-display text-3xl font-bold text-foreground tracking-tight">
+              {gameMode === "simple" ? "Simple" : "Advanced"} Mode
             </h1>
-            <p className="text-muted-foreground text-sm">Who can you trust?</p>
+            <p className="text-muted-foreground text-sm">Add your players</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSound}
-            className="text-muted-foreground"
-          >
-            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-          </Button>
+          <div className="w-10" /> {/* Spacer for alignment */}
         </div>
-      </div>
-
-      {/* Game Mode Toggle */}
-      <div className="flex gap-2 mb-6 animate-slide-up">
-        <Button
-          variant={gameMode === "simple" ? "mafia" : "outline"}
-          className="flex-1"
-          onClick={() => {
-            soundManager.playClick();
-            setGameMode("simple");
-          }}
-        >
-          <Zap size={16} />
-          Simple
-        </Button>
-        <Button
-          variant={gameMode === "advanced" ? "mafia" : "outline"}
-          className="flex-1"
-          onClick={() => {
-            soundManager.playClick();
-            setGameMode("advanced");
-          }}
-        >
-          <Sparkles size={16} />
-          Advanced
-        </Button>
-      </div>
-
-      {/* Mode Description */}
-      <div className="bg-secondary/50 rounded-lg p-3 mb-6 text-xs text-muted-foreground animate-slide-up">
-        {gameMode === "simple" ? (
-          <p>Classic mode: Mafia vs Civilians with voting</p>
-        ) : (
-          <p>
-            <span className="text-primary font-medium">Special Roles:</span> Godfather, Mafioso, Doctor, Detective • Day/Night phases with abilities
-          </p>
-        )}
       </div>
 
       {/* Player Input Section */}

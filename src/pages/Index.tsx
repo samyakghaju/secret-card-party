@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { ModeSelectScreen } from "@/components/game/ModeSelectScreen";
 import { SetupScreen } from "@/components/game/SetupScreen";
 import { RoleRevealScreen } from "@/components/game/RoleRevealScreen";
 import { NightIntro } from "@/components/game/NightIntro";
@@ -8,6 +9,7 @@ import { VotingPhase } from "@/components/game/VotingPhase";
 import { GameComplete } from "@/components/game/GameComplete";
 import { GameHistory } from "@/components/game/GameHistory";
 import { saveGame } from "@/lib/gameHistory";
+import { soundManager } from "@/lib/sounds";
 import { Player, GameMode, GamePhase, Role, isMafiaRole, AdvancedRole } from "@/lib/gameTypes";
 
 interface NightResult {
@@ -17,12 +19,13 @@ interface NightResult {
 }
 
 const Index = () => {
-  const [gamePhase, setGamePhase] = useState<GamePhase>("setup");
+  const [gamePhase, setGamePhase] = useState<GamePhase>("mode-select");
   const [players, setPlayers] = useState<Player[]>([]);
   const [mafiaCount, setMafiaCount] = useState(0);
   const [gameMode, setGameMode] = useState<GameMode>("simple");
   const [roundNumber, setRoundNumber] = useState(1);
   const [nightResult, setNightResult] = useState<NightResult | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
@@ -33,10 +36,28 @@ const Index = () => {
     return shuffled;
   };
 
-  const handleStartGame = useCallback((playerNames: string[], numMafia: number, mode: GameMode) => {
+  const handleSelectMode = useCallback((mode: GameMode) => {
+    setGameMode(mode);
+    setGamePhase("setup");
+  }, []);
+
+  const handleToggleSound = useCallback(() => {
+    const newState = !soundEnabled;
+    setSoundEnabled(newState);
+    soundManager.setEnabled(newState);
+    if (newState) {
+      soundManager.playClick();
+    }
+  }, [soundEnabled]);
+
+  const handleBackToModeSelect = useCallback(() => {
+    setGamePhase("mode-select");
+  }, []);
+
+  const handleStartGame = useCallback((playerNames: string[], numMafia: number) => {
     let roles: Role[];
     
-    if (mode === "advanced") {
+    if (gameMode === "advanced") {
       // Advanced mode: Godfather, Mafioso(s), Doctor, Detective, Civilians
       const advancedRoles: AdvancedRole[] = [];
       
@@ -78,11 +99,10 @@ const Index = () => {
 
     setPlayers(assignedPlayers);
     setMafiaCount(numMafia);
-    setGameMode(mode);
     setRoundNumber(1);
     setNightResult(null);
     setGamePhase("reveal");
-  }, []);
+  }, [gameMode]);
 
   const handleRoleRevealEnd = useCallback(() => {
     // Save game to history
@@ -190,7 +210,7 @@ const Index = () => {
     setMafiaCount(0);
     setRoundNumber(1);
     setNightResult(null);
-    setGamePhase("setup");
+    setGamePhase("mode-select");
   }, []);
 
   const handleShowHistory = useCallback(() => {
@@ -198,13 +218,25 @@ const Index = () => {
   }, []);
 
   const handleCloseHistory = useCallback(() => {
-    setGamePhase("setup");
+    setGamePhase("mode-select");
   }, []);
 
   return (
     <main className="min-h-screen">
+      {gamePhase === "mode-select" && (
+        <ModeSelectScreen 
+          onSelectMode={handleSelectMode} 
+          onShowHistory={handleShowHistory}
+          soundEnabled={soundEnabled}
+          onToggleSound={handleToggleSound}
+        />
+      )}
       {gamePhase === "setup" && (
-        <SetupScreen onStartGame={handleStartGame} onShowHistory={handleShowHistory} />
+        <SetupScreen 
+          gameMode={gameMode} 
+          onStartGame={handleStartGame} 
+          onBack={handleBackToModeSelect} 
+        />
       )}
       {gamePhase === "reveal" && (
         <RoleRevealScreen players={players} onGameEnd={handleRoleRevealEnd} />
