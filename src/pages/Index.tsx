@@ -15,7 +15,6 @@ import { Player, GameMode, GamePhase, Role, isMafiaRole, AdvancedRole } from "@/
 interface NightResult {
   eliminated: string | null;
   saved: boolean;
-  investigated: { name: string; isMafia: boolean } | null;
 }
 
 const Index = () => {
@@ -125,7 +124,6 @@ const Index = () => {
     let result: NightResult = {
       eliminated: null,
       saved: false,
-      investigated: null,
     };
 
     // Process mafia kill
@@ -142,18 +140,6 @@ const Index = () => {
       }
     }
 
-    // Process detective investigation
-    if (detectiveTarget) {
-      const targetPlayer = players.find(p => p.name === detectiveTarget);
-      if (targetPlayer) {
-        // Godfather appears innocent
-        const appearsAsMafia = isMafiaRole(targetPlayer.role) && targetPlayer.role !== "godfather";
-        result.investigated = {
-          name: detectiveTarget,
-          isMafia: appearsAsMafia,
-        };
-      }
-    }
 
     setPlayers(updatedPlayers);
     setNightResult(result);

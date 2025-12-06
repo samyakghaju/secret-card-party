@@ -10,7 +10,6 @@ interface DayPhaseProps {
   nightResult: {
     eliminated: string | null;
     saved: boolean;
-    investigated: { name: string; isMafia: boolean } | null;
   } | null;
   roundNumber: number;
   onStartVoting: () => void;
@@ -74,16 +73,6 @@ export const DayPhase = ({ players, nightResult, roundNumber, onStartVoting }: D
             </div>
           )}
           
-          {nightResult.investigated && (
-            <div className="mt-4 bg-secondary/50 rounded-xl p-4 text-center">
-              <p className="text-sm text-muted-foreground">
-                Detective's Investigation Result:
-              </p>
-              <p className={`font-medium mt-1 ${nightResult.investigated.isMafia ? 'text-primary' : 'text-civilian'}`}>
-                {nightResult.investigated.name} is {nightResult.investigated.isMafia ? 'SUSPICIOUS' : 'INNOCENT'}
-              </p>
-            </div>
-          )}
         </div>
       )}
 
