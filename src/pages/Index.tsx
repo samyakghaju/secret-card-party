@@ -6,7 +6,7 @@ import { NightIntro } from "@/components/game/NightIntro";
 import { NightPhase } from "@/components/game/NightPhase";
 import { DayPhase } from "@/components/game/DayPhase";
 import { VotingPhase } from "@/components/game/VotingPhase";
-import { GameComplete } from "@/components/game/GameComplete";
+import { GameWinner } from "@/components/game/GameWinner";
 import { GameHistory } from "@/components/game/GameHistory";
 import { saveGame } from "@/lib/gameHistory";
 import { soundManager } from "@/lib/sounds";
@@ -197,13 +197,9 @@ const Index = () => {
       // Continue to next night
       setRoundNumber(r => r + 1);
       setNightResult(null);
-      if (gameMode === "advanced") {
-        setGamePhase("night");
-      } else {
-        setGamePhase("day");
-      }
+      setGamePhase("night-intro");
     }
-  }, [players, gameMode]);
+  }, [players]);
 
   const handlePlayAgain = useCallback(() => {
     setPlayers([]);
@@ -267,12 +263,10 @@ const Index = () => {
         />
       )}
       {gamePhase === "complete" && (
-        <GameComplete
-          playerCount={players.filter(p => p.isAlive).length}
-          mafiaCount={players.filter(p => p.isAlive && isMafiaRole(p.role)).length}
-          onPlayAgain={handlePlayAgain}
+        <GameWinner
+          winner={players.filter(p => p.isAlive && isMafiaRole(p.role)).length === 0 ? "town" : "mafia"}
           players={players}
-          showWinner={roundNumber > 1}
+          onPlayAgain={handlePlayAgain}
         />
       )}
       {gamePhase === "history" && (

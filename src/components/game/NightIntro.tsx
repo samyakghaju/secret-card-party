@@ -1,28 +1,68 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Moon, Eye } from "lucide-react";
+import { Moon, Eye, EyeOff, Users } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
 import { GameMode } from "@/lib/gameTypes";
+import { Countdown } from "./Countdown";
+import { speak, cancelSpeech } from "@/lib/speech";
 
 interface NightIntroProps {
   onContinue: () => void;
   gameMode: GameMode;
 }
 
+type IntroStep = "countdown" | "night-falls" | "close-eyes" | "mafia-open" | "ready";
+
 export const NightIntro = ({ onContinue, gameMode }: NightIntroProps) => {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<IntroStep>("countdown");
+
+  const handleCountdownComplete = useCallback(() => {
+    soundManager.playMafiaReveal();
+    setStep("night-falls");
+  }, []);
 
   useEffect(() => {
-    soundManager.playMafiaReveal();
+    if (step === "night-falls") {
+      const timer = setTimeout(() => {
+        setStep("close-eyes");
+        speak("Everyone close your eyes");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
     
-    const timer1 = setTimeout(() => setStep(1), 1500);
-    const timer2 = setTimeout(() => setStep(2), 3000);
+    if (step === "close-eyes") {
+      const timer = setTimeout(() => {
+        setStep("mafia-open");
+        speak("Mafia, open your eyes");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
     
+    if (step === "mafia-open") {
+      const timer = setTimeout(() => {
+        setStep("ready");
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
+  useEffect(() => {
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
+      cancelSpeech();
     };
   }, []);
+
+  if (step === "countdown") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-background">
+        <Countdown 
+          seconds={3} 
+          onComplete={handleCountdownComplete}
+          label="Night falls in..."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-background">
@@ -36,20 +76,21 @@ export const NightIntro = ({ onContinue, gameMode }: NightIntroProps) => {
 
         {/* Messages */}
         <div className="space-y-4 min-h-[120px]">
-          <h1 
-            className={`font-display text-3xl font-bold text-foreground transition-opacity duration-500 ${step >= 0 ? 'opacity-100' : 'opacity-0'}`}
+        <h1 
+            className="font-display text-3xl font-bold text-foreground transition-opacity duration-500 opacity-100"
           >
             Night Falls...
           </h1>
           
-          <p 
-            className={`text-xl text-primary font-medium transition-opacity duration-500 ${step >= 1 ? 'opacity-100' : 'opacity-0'}`}
+          <div 
+            className={`flex items-center justify-center gap-2 text-xl text-muted-foreground font-medium transition-opacity duration-500 ${step === "close-eyes" || step === "mafia-open" || step === "ready" ? 'opacity-100' : 'opacity-0'}`}
           >
-            Everyone close your eyes
-          </p>
+            <EyeOff size={24} />
+            <span>Everyone close your eyes</span>
+          </div>
           
           <div 
-            className={`flex items-center justify-center gap-2 text-2xl text-primary font-display transition-opacity duration-500 ${step >= 2 ? 'opacity-100' : 'opacity-0'}`}
+            className={`flex items-center justify-center gap-2 text-2xl text-primary font-display transition-opacity duration-500 ${step === "mafia-open" || step === "ready" ? 'opacity-100' : 'opacity-0'}`}
           >
             <Eye size={28} />
             <span>Mafia, open your eyes</span>
@@ -57,7 +98,7 @@ export const NightIntro = ({ onContinue, gameMode }: NightIntroProps) => {
         </div>
 
         {/* Instructions */}
-        {step >= 2 && (
+        {step === "ready" && (
           <div className="space-y-4 animate-slide-up">
             <p className="text-sm text-muted-foreground">
               {gameMode === "advanced" 
