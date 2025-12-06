@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Moon, Skull, Heart, Search, ArrowRight, Check } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
-import { Player, GameMode } from "@/lib/gameTypes";
+import { Player, GameMode, isMafiaRole } from "@/lib/gameTypes";
+import { speak } from "@/lib/speech";
 
 interface NightPhaseProps {
   players: Player[];
@@ -17,10 +18,21 @@ export const NightPhase = ({ players, gameMode, onNightEnd }: NightPhaseProps) =
   const [mafiaTarget, setMafiaTarget] = useState<string | null>(null);
   const [doctorTarget, setDoctorTarget] = useState<string | null>(null);
   const [detectiveTarget, setDetectiveTarget] = useState<string | null>(null);
+  const [showInvestigationResult, setShowInvestigationResult] = useState(false);
+  const [investigationResult, setInvestigationResult] = useState<{ name: string; isMafia: boolean } | null>(null);
   
   const alivePlayers = players.filter(p => p.isAlive);
   const hasDoctor = gameMode === "advanced" && players.some(p => p.role === "doctor" && p.isAlive);
   const hasDetective = gameMode === "advanced" && players.some(p => p.role === "detective" && p.isAlive);
+
+  // Speak announcements when step changes
+  useEffect(() => {
+    if (step === "doctor") {
+      speak("Doctor, open your eyes");
+    } else if (step === "detective") {
+      speak("Detective, open your eyes");
+    }
+  }, [step]);
   
   const getNextStep = (current: NightStep): NightStep => {
     if (current === "mafia") {
@@ -37,12 +49,44 @@ export const NightPhase = ({ players, gameMode, onNightEnd }: NightPhaseProps) =
 
   const handleConfirm = () => {
     soundManager.playClick();
+    
+    // Speak close eyes announcement based on current step
+    if (step === "mafia") {
+      speak("Mafia, close your eyes");
+    } else if (step === "doctor") {
+      speak("Doctor, close your eyes");
+    } else if (step === "detective") {
+      // Show investigation result before closing
+      if (detectiveTarget) {
+        const targetPlayer = players.find(p => p.name === detectiveTarget);
+        if (targetPlayer) {
+          const isMafia = isMafiaRole(targetPlayer.role);
+          setInvestigationResult({ name: detectiveTarget, isMafia });
+          setShowInvestigationResult(true);
+          return; // Wait for detective to see result before continuing
+        }
+      }
+      speak("Detective, close your eyes");
+    }
+    
     const next = getNextStep(step);
     if (next === "complete") {
       onNightEnd(mafiaTarget, doctorTarget, detectiveTarget);
     } else {
       setStep(next);
     }
+  };
+
+  const handleInvestigationDismiss = () => {
+    setShowInvestigationResult(false);
+    speak("Detective, close your eyes", () => {
+      const next = getNextStep(step);
+      if (next === "complete") {
+        onNightEnd(mafiaTarget, doctorTarget, detectiveTarget);
+      } else {
+        setStep(next);
+      }
+    });
   };
 
   const renderStepContent = () => {
@@ -112,6 +156,41 @@ export const NightPhase = ({ players, gameMode, onNightEnd }: NightPhaseProps) =
   };
 
   const currentTarget = getCurrentTarget();
+
+  // Show investigation result overlay
+  if (showInvestigationResult && investigationResult) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 max-w-md mx-auto">
+        <div className="text-center space-y-6 animate-slide-up">
+          <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center animate-pulse-glow ${
+            investigationResult.isMafia ? 'bg-primary/20' : 'bg-civilian/20'
+          }`}>
+            <Search size={48} className={investigationResult.isMafia ? 'text-primary' : 'text-civilian'} />
+          </div>
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            Investigation Result
+          </h2>
+          <p className="text-muted-foreground">
+            Only the Detective should see this:
+          </p>
+          <p className={`font-display text-xl font-bold ${
+            investigationResult.isMafia ? 'text-primary' : 'text-civilian'
+          }`}>
+            {investigationResult.name} is {investigationResult.isMafia ? 'SUSPICIOUS' : 'INNOCENT'}
+          </p>
+          <Button
+            variant="civilian"
+            size="xl"
+            onClick={handleInvestigationDismiss}
+            className="mt-8"
+          >
+            <ArrowRight size={20} />
+            Continue
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col px-4 py-8 max-w-md mx-auto">
