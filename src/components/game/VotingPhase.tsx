@@ -1,40 +1,66 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Vote, Check, X, Skull, Moon } from "lucide-react";
+import { Vote, Check, X, Skull, Moon, AlertCircle } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
-import { Player } from "@/lib/gameTypes";
+import { Player, isMafiaRole } from "@/lib/gameTypes";
+import { Countdown } from "./Countdown";
+import { speak, cancelSpeech } from "@/lib/speech";
 
 interface VotingPhaseProps {
   players: Player[];
-  onVoteComplete: (eliminatedPlayer: string | null) => void;
+  onVoteComplete: (eliminatedPlayer: string | null, eliminatedRole?: string) => void;
   onSkipVote: () => void;
 }
+
+type VotingStep = "voting" | "confirm" | "results" | "countdown" | "reveal";
 
 export const VotingPhase = ({ players, onVoteComplete, onSkipVote }: VotingPhaseProps) => {
   const [votes, setVotes] = useState<Record<string, string>>({});
   const [currentVoterIndex, setCurrentVoterIndex] = useState(0);
-  const [showResults, setShowResults] = useState(false);
+  const [step, setStep] = useState<VotingStep>("voting");
+  const [selectedVote, setSelectedVote] = useState<string | null>(null);
+  const [eliminatedPlayer, setEliminatedPlayer] = useState<Player | null>(null);
   
   const alivePlayers = players.filter(p => p.isAlive);
   const currentVoter = alivePlayers[currentVoterIndex];
   const isLastVoter = currentVoterIndex === alivePlayers.length - 1;
 
-  const handleVote = (targetName: string | null) => {
+  useEffect(() => {
+    return () => {
+      cancelSpeech();
+    };
+  }, []);
+
+  const handleSelectVote = (targetName: string | null) => {
+    soundManager.playClick();
+    setSelectedVote(targetName);
+    setStep("confirm");
+  };
+
+  const handleConfirmVote = () => {
     soundManager.playClick();
     
     if (currentVoter) {
       const newVotes = { ...votes };
-      if (targetName) {
-        newVotes[currentVoter.name] = targetName;
+      if (selectedVote) {
+        newVotes[currentVoter.name] = selectedVote;
       }
       setVotes(newVotes);
       
       if (isLastVoter) {
-        setShowResults(true);
+        setStep("results");
       } else {
         setCurrentVoterIndex(currentVoterIndex + 1);
+        setSelectedVote(null);
+        setStep("voting");
       }
     }
+  };
+
+  const handleCancelVote = () => {
+    soundManager.playClick();
+    setSelectedVote(null);
+    setStep("voting");
   };
 
   const calculateResults = () => {
@@ -69,10 +95,149 @@ export const VotingPhase = ({ players, onVoteComplete, onSkipVote }: VotingPhase
   const handleConfirmResults = () => {
     soundManager.playClick();
     const results = calculateResults();
-    onVoteComplete(results.eliminated);
+    
+    if (results.eliminated) {
+      const player = players.find(p => p.name === results.eliminated);
+      if (player) {
+        setEliminatedPlayer(player);
+        setStep("countdown");
+        return;
+      }
+    }
+    
+    onVoteComplete(null);
   };
 
-  if (showResults) {
+  const handleCountdownComplete = useCallback(() => {
+    setStep("reveal");
+  }, []);
+
+  const handleRevealComplete = () => {
+    soundManager.playClick();
+    if (eliminatedPlayer) {
+      onVoteComplete(eliminatedPlayer.name, eliminatedPlayer.role);
+    }
+  };
+
+  // Countdown before role reveal
+  if (step === "countdown") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-background">
+        <div className="text-center space-y-6 animate-slide-up">
+          <div className="w-24 h-24 mx-auto rounded-full bg-primary/20 flex items-center justify-center animate-pulse-glow">
+            <Skull size={48} className="text-primary" />
+          </div>
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            {eliminatedPlayer?.name} has been eliminated!
+          </h2>
+          <p className="text-muted-foreground">Role reveal in...</p>
+        </div>
+        <div className="mt-8">
+          <Countdown 
+            seconds={3} 
+            onComplete={handleCountdownComplete}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Role reveal
+  if (step === "reveal" && eliminatedPlayer) {
+    const isMafia = isMafiaRole(eliminatedPlayer.role);
+    
+    return (
+      <div className="min-h-screen flex flex-col px-4 py-8 max-w-md mx-auto">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="text-center space-y-6 w-full animate-slide-up">
+            <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center animate-pulse-glow ${
+              isMafia ? 'bg-primary/30' : 'bg-emerald-500/30'
+            }`}>
+              <Skull size={64} className={isMafia ? 'text-primary' : 'text-emerald-400'} />
+            </div>
+            
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground mb-2">
+                {eliminatedPlayer.name}
+              </h2>
+              <p className={`text-xl font-display capitalize ${
+                isMafia ? 'text-primary' : 'text-emerald-400'
+              }`}>
+                was a {eliminatedPlayer.role}
+              </p>
+            </div>
+            
+            <p className="text-muted-foreground">
+              {isMafia 
+                ? "The town successfully eliminated a mafia member!"
+                : "An innocent townsperson was eliminated..."}
+            </p>
+          </div>
+        </div>
+
+        <div className="pt-6">
+          <Button
+            variant="mafia"
+            size="xl"
+            onClick={handleRevealComplete}
+            className="w-full"
+          >
+            <Moon size={20} />
+            Continue
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Vote confirmation
+  if (step === "confirm") {
+    return (
+      <div className="min-h-screen flex flex-col px-4 py-8 max-w-md mx-auto">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="text-center space-y-6 w-full animate-slide-up">
+            <div className="w-24 h-24 mx-auto rounded-full bg-amber-400/20 flex items-center justify-center">
+              <AlertCircle size={48} className="text-amber-400" />
+            </div>
+            
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground">
+                Confirm Vote
+              </h2>
+              <p className="text-muted-foreground mt-2">
+                {currentVoter?.name}, you are voting for:
+              </p>
+              <p className="text-2xl text-primary font-display font-bold mt-4">
+                {selectedVote || "Skip Vote"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-6 space-y-3">
+          <Button
+            variant="mafia"
+            size="xl"
+            onClick={handleConfirmVote}
+            className="w-full"
+          >
+            <Check size={20} />
+            Confirm Vote
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={handleCancelVote}
+            className="w-full"
+          >
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "results") {
     const results = calculateResults();
     
     return (
@@ -86,7 +251,7 @@ export const VotingPhase = ({ players, onVoteComplete, onSkipVote }: VotingPhase
                 </div>
                 <div>
                   <h2 className="font-display text-2xl font-bold text-foreground">
-                    {results.eliminated} has been eliminated!
+                    {results.eliminated} has been voted out!
                   </h2>
                   <p className="text-muted-foreground text-sm mt-2">
                     The town has spoken
@@ -134,7 +299,7 @@ export const VotingPhase = ({ players, onVoteComplete, onSkipVote }: VotingPhase
             className="w-full"
           >
             <Moon size={20} />
-            Continue to Night
+            Continue
           </Button>
         </div>
       </div>
@@ -179,7 +344,7 @@ export const VotingPhase = ({ players, onVoteComplete, onSkipVote }: VotingPhase
           .map((player) => (
           <button
             key={player.name}
-            onClick={() => handleVote(player.name)}
+            onClick={() => handleSelectVote(player.name)}
             className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-secondary/50 border-2 border-transparent hover:border-primary transition-all"
           >
             <span className="font-medium text-foreground">{player.name}</span>
@@ -193,7 +358,7 @@ export const VotingPhase = ({ players, onVoteComplete, onSkipVote }: VotingPhase
         <Button
           variant="outline"
           size="lg"
-          onClick={() => handleVote(null)}
+          onClick={() => handleSelectVote(null)}
           className="w-full"
         >
           Skip Vote
