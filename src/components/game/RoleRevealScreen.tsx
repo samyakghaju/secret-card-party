@@ -22,13 +22,9 @@ export const RoleRevealScreen = ({ players, onGameEnd }: RoleRevealScreenProps) 
     soundManager.playReveal();
     setIsRevealed(true);
     
-    // Play role-specific sound after a short delay
+    // Play the same reveal sound for all roles after a short delay
     setTimeout(() => {
-      if (isMafia) {
-        soundManager.playMafiaReveal();
-      } else {
-        soundManager.playCivilianReveal();
-      }
+      soundManager.playReveal();
     }, 300);
   };
 
