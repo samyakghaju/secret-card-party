@@ -63,9 +63,12 @@ export const RoleRevealScreen = ({ players, onGameEnd }: RoleRevealScreenProps) 
               <p className="text-muted-foreground text-sm uppercase tracking-wider">
                 Pass the phone to
               </p>
-              <h2 className="font-display text-4xl font-bold text-foreground">
-                {currentPlayer.name}
-              </h2>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-4xl">{currentPlayer.avatar}</span>
+                <h2 className="font-display text-4xl font-bold text-foreground">
+                  {currentPlayer.name}
+                </h2>
+              </div>
             </div>
 
             <div className="relative">

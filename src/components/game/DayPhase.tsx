@@ -111,9 +111,10 @@ export const DayPhase = ({ players, nightResult, roundNumber, timerMinutes, onSt
           {alivePlayers.map((player, i) => (
             <div
               key={player.name}
-              className="flex items-center justify-between bg-secondary/50 rounded-lg px-4 py-3 animate-slide-up"
+              className="flex items-center gap-3 bg-secondary/50 rounded-lg px-4 py-3 animate-slide-up"
               style={{ animationDelay: `${0.3 + i * 0.05}s` }}
             >
+              <span className="text-xl">{player.avatar}</span>
               <span className="font-medium text-foreground">{player.name}</span>
             </div>
           ))}
