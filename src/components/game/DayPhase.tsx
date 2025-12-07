@@ -12,10 +12,11 @@ interface DayPhaseProps {
     saved: boolean;
   } | null;
   roundNumber: number;
+  timerMinutes: number;
   onStartVoting: () => void;
 }
 
-export const DayPhase = ({ players, nightResult, roundNumber, onStartVoting }: DayPhaseProps) => {
+export const DayPhase = ({ players, nightResult, roundNumber, timerMinutes, onStartVoting }: DayPhaseProps) => {
   const [showResult, setShowResult] = useState(true);
   
   const alivePlayers = players.filter(p => p.isAlive);
@@ -23,11 +24,18 @@ export const DayPhase = ({ players, nightResult, roundNumber, onStartVoting }: D
   const aliveTown = alivePlayers.length - aliveMafia;
 
   useEffect(() => {
+    // Start day ambient
+    soundManager.startDayAmbient();
+    
     if (nightResult?.eliminated && !nightResult.saved) {
       soundManager.playMafiaReveal();
     } else {
       soundManager.playCivilianReveal();
     }
+
+    return () => {
+      soundManager.stopAmbient();
+    };
   }, [nightResult]);
 
   return (
@@ -91,7 +99,7 @@ export const DayPhase = ({ players, nightResult, roundNumber, onStartVoting }: D
 
       {/* Discussion Timer */}
       <div className="mb-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-        <Timer defaultMinutes={3} />
+        <Timer defaultMinutes={timerMinutes} />
       </div>
 
       {/* Alive Players */}

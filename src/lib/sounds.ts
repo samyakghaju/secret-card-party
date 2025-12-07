@@ -173,6 +173,11 @@ class SoundManager {
   }
 
   // Night phase ambient
+  private ambientNode: OscillatorNode | null = null;
+  private ambientGain: GainNode | null = null;
+  private dayAmbientNode: OscillatorNode | null = null;
+  private dayAmbientGain: GainNode | null = null;
+
   playNightSound() {
     if (!this.enabled) return;
     const ctx = this.getContext();
@@ -189,6 +194,95 @@ class SoundManager {
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 1);
+  }
+
+  // Continuous night ambient loop
+  startNightAmbient() {
+    if (!this.enabled) return;
+    this.stopAmbient();
+    
+    const ctx = this.getContext();
+    
+    // Create a dark, mysterious drone
+    this.ambientNode = ctx.createOscillator();
+    this.ambientGain = ctx.createGain();
+    
+    this.ambientNode.connect(this.ambientGain);
+    this.ambientGain.connect(ctx.destination);
+    
+    this.ambientNode.type = "sine";
+    this.ambientNode.frequency.setValueAtTime(55, ctx.currentTime); // Low A
+    this.ambientGain.gain.setValueAtTime(0.03, ctx.currentTime);
+    
+    // Add subtle LFO for movement
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.connect(lfoGain);
+    lfoGain.connect(this.ambientNode.frequency);
+    lfo.frequency.setValueAtTime(0.2, ctx.currentTime);
+    lfoGain.gain.setValueAtTime(10, ctx.currentTime);
+    lfo.start();
+    
+    this.ambientNode.start();
+  }
+
+  // Continuous day ambient loop
+  startDayAmbient() {
+    if (!this.enabled) return;
+    this.stopAmbient();
+    
+    const ctx = this.getContext();
+    
+    // Brighter, warmer ambient tone
+    this.dayAmbientNode = ctx.createOscillator();
+    this.dayAmbientGain = ctx.createGain();
+    
+    this.dayAmbientNode.connect(this.dayAmbientGain);
+    this.dayAmbientGain.connect(ctx.destination);
+    
+    this.dayAmbientNode.type = "triangle";
+    this.dayAmbientNode.frequency.setValueAtTime(220, ctx.currentTime); // A3
+    this.dayAmbientGain.gain.setValueAtTime(0.015, ctx.currentTime);
+    
+    this.dayAmbientNode.start();
+  }
+
+  stopAmbient() {
+    try {
+      if (this.ambientNode) {
+        this.ambientNode.stop();
+        this.ambientNode = null;
+      }
+      if (this.ambientGain) {
+        this.ambientGain = null;
+      }
+      if (this.dayAmbientNode) {
+        this.dayAmbientNode.stop();
+        this.dayAmbientNode = null;
+      }
+      if (this.dayAmbientGain) {
+        this.dayAmbientGain = null;
+      }
+    } catch (e) {
+      // Ignore errors from already stopped nodes
+    }
+  }
+
+  // Voting tension sound
+  playVotingAmbient() {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(110, ctx.currentTime);
+    gain.gain.setValueAtTime(0.02, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.5);
   }
 }
 

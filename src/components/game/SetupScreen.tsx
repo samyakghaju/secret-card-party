@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash2, Users, Skull, ArrowLeft } from "lucide-react";
+import { Plus, Minus, Trash2, Users, Skull, ArrowLeft, Clock } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
 import { GameMode } from "@/lib/gameTypes";
 
 interface SetupScreenProps {
   gameMode: GameMode;
-  onStartGame: (players: string[], mafiaCount: number) => void;
+  onStartGame: (players: string[], mafiaCount: number, timerMinutes: number) => void;
   onBack: () => void;
 }
 
@@ -15,6 +15,7 @@ export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps)
   const [players, setPlayers] = useState<string[]>([""]);
   const [mafiaCount, setMafiaCount] = useState(1);
   const [newPlayerName, setNewPlayerName] = useState("");
+  const [timerMinutes, setTimerMinutes] = useState(3);
 
   const validPlayers = players.filter((p) => p.trim() !== "");
   const maxMafia = Math.max(1, Math.floor(validPlayers.length / 2) - 1);
@@ -47,7 +48,7 @@ export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps)
 
   const handleStartGame = () => {
     soundManager.playGameStart();
-    onStartGame(validPlayers, mafiaCount);
+    onStartGame(validPlayers, mafiaCount, timerMinutes);
   };
 
   return (
@@ -164,6 +165,50 @@ export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps)
             
             <p className="text-center text-xs text-muted-foreground">
               {mafiaCount} mafia vs {validPlayers.length - mafiaCount} civilians
+            </p>
+          </div>
+        )}
+
+        {/* Timer Duration Selector */}
+        {validPlayers.length >= 3 && (
+          <div className="space-y-3 pt-4 border-t border-border animate-slide-up">
+            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Clock size={18} className="text-amber-400" />
+              Discussion Timer
+            </label>
+            
+            <div className="flex items-center justify-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  soundManager.playClick();
+                  setTimerMinutes(Math.max(1, timerMinutes - 1));
+                }}
+                disabled={timerMinutes <= 1}
+              >
+                <Minus size={20} />
+              </Button>
+              
+              <div className="w-20 h-16 rounded-xl bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center">
+                <span className="font-display text-2xl font-bold text-amber-400">{timerMinutes} min</span>
+              </div>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  soundManager.playClick();
+                  setTimerMinutes(Math.min(10, timerMinutes + 1));
+                }}
+                disabled={timerMinutes >= 10}
+              >
+                <Plus size={20} />
+              </Button>
+            </div>
+            
+            <p className="text-center text-xs text-muted-foreground">
+              Time for discussion each round
             </p>
           </div>
         )}
