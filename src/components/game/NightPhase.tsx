@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Moon, Skull, Heart, Search, ArrowRight, Check } from "lucide-react";
+import { Moon, Skull, Heart, Search, ArrowRight, Check, Eye, EyeOff } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
 import { Player, GameMode, isMafiaRole } from "@/lib/gameTypes";
 import { speak } from "@/lib/speech";
+import { cn } from "@/lib/utils";
 
 interface NightPhaseProps {
   players: Player[];
@@ -25,13 +26,23 @@ export const NightPhase = ({ players, gameMode, onNightEnd }: NightPhaseProps) =
   const hasDoctor = gameMode === "advanced" && players.some(p => p.role === "doctor" && p.isAlive);
   const hasDetective = gameMode === "advanced" && players.some(p => p.role === "detective" && p.isAlive);
 
-  // Speak announcements when step changes
+  // Calculate turn order for indicators
+  const turnOrder = ["mafia", hasDoctor ? "doctor" : null, hasDetective ? "detective" : null].filter(Boolean) as NightStep[];
+  const currentTurnIndex = turnOrder.indexOf(step);
+
+  // Start ambient and speak announcements when step changes
   useEffect(() => {
+    soundManager.startNightAmbient();
+    
     if (step === "doctor") {
       speak("Doctor, open your eyes");
     } else if (step === "detective") {
       speak("Detective, open your eyes");
     }
+
+    return () => {
+      soundManager.stopAmbient();
+    };
   }, [step]);
   
   const getNextStep = (current: NightStep): NightStep => {
@@ -195,9 +206,65 @@ export const NightPhase = ({ players, gameMode, onNightEnd }: NightPhaseProps) =
   return (
     <div className="min-h-screen flex flex-col px-4 py-8 max-w-md mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-center gap-2 mb-6 text-primary">
+      <div className="flex items-center justify-center gap-2 mb-4 text-primary">
         <Moon size={20} />
         <span className="text-sm font-medium uppercase tracking-wider">Night Phase</span>
+      </div>
+
+      {/* Turn Indicators */}
+      <div className="flex justify-center gap-3 mb-6">
+        {turnOrder.map((turnStep, index) => {
+          const isActive = step === turnStep;
+          const isPast = index < currentTurnIndex;
+          
+          const getIcon = () => {
+            switch (turnStep) {
+              case "mafia": return <Skull size={16} />;
+              case "doctor": return <Heart size={16} />;
+              case "detective": return <Search size={16} />;
+              default: return null;
+            }
+          };
+
+          const getLabel = () => {
+            switch (turnStep) {
+              case "mafia": return "Mafia";
+              case "doctor": return "Doctor";
+              case "detective": return "Detective";
+              default: return "";
+            }
+          };
+
+          return (
+            <div
+              key={turnStep}
+              className={cn(
+                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all",
+                isActive && "bg-primary/20 border border-primary scale-110",
+                isPast && "opacity-50",
+                !isActive && !isPast && "opacity-30"
+              )}
+            >
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center",
+                isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+              )}>
+                {isPast ? <Check size={16} /> : getIcon()}
+              </div>
+              <span className={cn(
+                "text-xs font-medium",
+                isActive ? "text-foreground" : "text-muted-foreground"
+              )}>
+                {getLabel()}
+              </span>
+              {isActive && (
+                <div className="flex items-center gap-1 text-primary">
+                  <Eye size={12} className="animate-pulse" />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Step Content */}

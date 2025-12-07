@@ -25,6 +25,7 @@ const Index = () => {
   const [roundNumber, setRoundNumber] = useState(1);
   const [nightResult, setNightResult] = useState<NightResult | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [timerMinutes, setTimerMinutes] = useState(3);
 
   const shuffleArray = <T,>(array: T[]): T[] => {
     const shuffled = [...array];
@@ -53,7 +54,7 @@ const Index = () => {
     setGamePhase("mode-select");
   }, []);
 
-  const handleStartGame = useCallback((playerNames: string[], numMafia: number) => {
+  const handleStartGame = useCallback((playerNames: string[], numMafia: number, timerMins: number) => {
     let roles: Role[];
     
     if (gameMode === "advanced") {
@@ -98,6 +99,7 @@ const Index = () => {
 
     setPlayers(assignedPlayers);
     setMafiaCount(numMafia);
+    setTimerMinutes(timerMins);
     setRoundNumber(1);
     setNightResult(null);
     setGamePhase("reveal");
@@ -238,6 +240,7 @@ const Index = () => {
           players={players} 
           nightResult={nightResult} 
           roundNumber={roundNumber}
+          timerMinutes={timerMinutes}
           onStartVoting={handleStartVoting}
         />
       )}
