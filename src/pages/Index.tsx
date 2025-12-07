@@ -10,7 +10,7 @@ import { GameWinner } from "@/components/game/GameWinner";
 import { GameHistory } from "@/components/game/GameHistory";
 import { saveGame } from "@/lib/gameHistory";
 import { soundManager } from "@/lib/sounds";
-import { Player, GameMode, GamePhase, Role, isMafiaRole, AdvancedRole } from "@/lib/gameTypes";
+import { Player, GameMode, GamePhase, Role, isMafiaRole, AdvancedRole, PLAYER_AVATARS } from "@/lib/gameTypes";
 
 interface NightResult {
   eliminated: string | null;
@@ -54,7 +54,7 @@ const Index = () => {
     setGamePhase("mode-select");
   }, []);
 
-  const handleStartGame = useCallback((playerNames: string[], numMafia: number, timerMins: number) => {
+  const handleStartGame = useCallback((playerNames: string[], numMafia: number, timerMins: number, avatars: string[]) => {
     let roles: Role[];
     
     if (gameMode === "advanced") {
@@ -89,12 +89,13 @@ const Index = () => {
     }
 
     const shuffledRoles = shuffleArray(roles);
-    const shuffledNames = shuffleArray(playerNames);
+    const shuffledIndices = shuffleArray(playerNames.map((_, i) => i));
 
-    const assignedPlayers: Player[] = shuffledNames.map((name, index) => ({
-      name,
-      role: shuffledRoles[index],
+    const assignedPlayers: Player[] = shuffledIndices.map((originalIndex, newIndex) => ({
+      name: playerNames[originalIndex],
+      role: shuffledRoles[newIndex],
       isAlive: true,
+      avatar: avatars[originalIndex] || PLAYER_AVATARS[originalIndex % PLAYER_AVATARS.length],
     }));
 
     setPlayers(assignedPlayers);
@@ -116,8 +117,8 @@ const Index = () => {
     if (gameMode === "advanced") {
       setGamePhase("night");
     } else {
-      // Simple mode goes straight to day/voting
-      setGamePhase("day");
+      // Simple mode goes straight to voting (no night phase)
+      setGamePhase("voting");
     }
   }, [gameMode]);
 
@@ -182,12 +183,17 @@ const Index = () => {
     if (aliveMafia === 0 || aliveMafia >= aliveTown) {
       setGamePhase("complete");
     } else {
-      // Continue to next night
+      // Continue to next round
       setRoundNumber(r => r + 1);
       setNightResult(null);
-      setGamePhase("night-intro");
+      // Simple mode: go straight to voting, Advanced mode: go to night-intro
+      if (gameMode === "simple") {
+        setGamePhase("voting");
+      } else {
+        setGamePhase("night-intro");
+      }
     }
-  }, [players]);
+  }, [players, gameMode]);
 
   const handlePlayAgain = useCallback(() => {
     setPlayers([]);

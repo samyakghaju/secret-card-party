@@ -329,9 +329,12 @@ export const VotingPhase = ({ players, onVoteComplete, onSkipVote }: VotingPhase
       {/* Current Voter */}
       <div className="text-center mb-6 animate-slide-up">
         <p className="text-muted-foreground text-sm">Pass the phone to</p>
-        <h2 className="font-display text-3xl font-bold text-foreground">
-          {currentVoter?.name}
-        </h2>
+        <div className="flex items-center justify-center gap-3 mt-2">
+          <span className="text-4xl">{currentVoter?.avatar}</span>
+          <h2 className="font-display text-3xl font-bold text-foreground">
+            {currentVoter?.name}
+          </h2>
+        </div>
         <p className="text-sm text-muted-foreground mt-2">
           Vote to eliminate a suspect
         </p>
@@ -347,7 +350,10 @@ export const VotingPhase = ({ players, onVoteComplete, onSkipVote }: VotingPhase
             onClick={() => handleSelectVote(player.name)}
             className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-secondary/50 border-2 border-transparent hover:border-primary transition-all"
           >
-            <span className="font-medium text-foreground">{player.name}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{player.avatar}</span>
+              <span className="font-medium text-foreground">{player.name}</span>
+            </div>
             <Vote size={18} className="text-muted-foreground" />
           </button>
         ))}

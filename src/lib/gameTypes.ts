@@ -5,10 +5,16 @@ export type SimpleRole = "mafia" | "civilian";
 export type AdvancedRole = "godfather" | "mafioso" | "doctor" | "detective" | "civilian";
 export type Role = SimpleRole | AdvancedRole;
 
+export const PLAYER_AVATARS = [
+  "👤", "🎭", "🦊", "🐺", "🦁", "🐻", "🐼", "🐨", 
+  "🐵", "🦅", "🦉", "🐝", "🦋", "🐢", "🐙", "🦈"
+] as const;
+
 export interface Player {
   name: string;
   role: Role;
   isAlive: boolean;
+  avatar: string;
   isProtected?: boolean;
   isInvestigated?: boolean;
 }

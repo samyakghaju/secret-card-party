@@ -289,7 +289,10 @@ export const NightPhase = ({ players, gameMode, onNightEnd }: NightPhaseProps) =
                 : "bg-secondary/50 border-2 border-transparent hover:border-border"
             }`}
           >
-            <span className="font-medium text-foreground">{player.name}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{player.avatar}</span>
+              <span className="font-medium text-foreground">{player.name}</span>
+            </div>
             {currentTarget === player.name && (
               <Check size={20} className={step === "mafia" ? "text-primary" : "text-civilian"} />
             )}

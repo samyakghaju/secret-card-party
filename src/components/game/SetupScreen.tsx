@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, Trash2, Users, Skull, ArrowLeft, Clock } from "lucide-react";
+import { Plus, Minus, Trash2, Users, Skull, ArrowLeft, Clock, RefreshCw } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
-import { GameMode } from "@/lib/gameTypes";
+import { GameMode, PLAYER_AVATARS } from "@/lib/gameTypes";
 
 interface SetupScreenProps {
   gameMode: GameMode;
-  onStartGame: (players: string[], mafiaCount: number, timerMinutes: number) => void;
+  onStartGame: (players: string[], mafiaCount: number, timerMinutes: number, avatars: string[]) => void;
   onBack: () => void;
 }
 
 export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps) => {
   const [players, setPlayers] = useState<string[]>([""]);
+  const [playerAvatars, setPlayerAvatars] = useState<string[]>([]);
   const [mafiaCount, setMafiaCount] = useState(1);
   const [newPlayerName, setNewPlayerName] = useState("");
   const [timerMinutes, setTimerMinutes] = useState(3);
@@ -23,7 +24,15 @@ export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps)
   const addPlayer = () => {
     if (newPlayerName.trim()) {
       soundManager.playClick();
-      setPlayers([...players.filter((p) => p.trim() !== ""), newPlayerName.trim()]);
+      const newPlayers = [...players.filter((p) => p.trim() !== ""), newPlayerName.trim()];
+      setPlayers(newPlayers);
+      // Assign a random avatar from remaining avatars
+      const usedAvatars = new Set(playerAvatars);
+      const availableAvatars = PLAYER_AVATARS.filter(a => !usedAvatars.has(a));
+      const newAvatar = availableAvatars.length > 0 
+        ? availableAvatars[Math.floor(Math.random() * availableAvatars.length)]
+        : PLAYER_AVATARS[newPlayers.length % PLAYER_AVATARS.length];
+      setPlayerAvatars([...playerAvatars, newAvatar]);
       setNewPlayerName("");
     }
   };
@@ -31,10 +40,22 @@ export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps)
   const removePlayer = (index: number) => {
     soundManager.playClick();
     const newPlayers = validPlayers.filter((_, i) => i !== index);
+    const newAvatars = playerAvatars.filter((_, i) => i !== index);
     setPlayers(newPlayers.length > 0 ? newPlayers : [""]);
+    setPlayerAvatars(newAvatars);
     if (mafiaCount > Math.max(1, Math.floor(newPlayers.length / 2) - 1)) {
       setMafiaCount(Math.max(1, Math.floor(newPlayers.length / 2) - 1));
     }
+  };
+
+  const cycleAvatar = (index: number) => {
+    soundManager.playClick();
+    const currentAvatar = playerAvatars[index];
+    const currentIdx = PLAYER_AVATARS.indexOf(currentAvatar as typeof PLAYER_AVATARS[number]);
+    const nextIdx = (currentIdx + 1) % PLAYER_AVATARS.length;
+    const newAvatars = [...playerAvatars];
+    newAvatars[index] = PLAYER_AVATARS[nextIdx];
+    setPlayerAvatars(newAvatars);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -48,7 +69,7 @@ export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps)
 
   const handleStartGame = () => {
     soundManager.playGameStart();
-    onStartGame(validPlayers, mafiaCount, timerMinutes);
+    onStartGame(validPlayers, mafiaCount, timerMinutes, playerAvatars);
   };
 
   return (
@@ -112,7 +133,16 @@ export const SetupScreen = ({ gameMode, onStartGame, onBack }: SetupScreenProps)
               className="flex items-center justify-between bg-secondary/50 rounded-lg px-4 py-3 animate-slide-up"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <span className="font-medium text-foreground">{player}</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => cycleAvatar(index)}
+                  className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-xl hover:bg-primary/30 transition-colors"
+                  title="Click to change avatar"
+                >
+                  {playerAvatars[index] || PLAYER_AVATARS[index % PLAYER_AVATARS.length]}
+                </button>
+                <span className="font-medium text-foreground">{player}</span>
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
