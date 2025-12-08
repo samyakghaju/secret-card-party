@@ -14,13 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_players: {
+        Row: {
+          avatar: string
+          created_at: string
+          device_id: string
+          id: string
+          is_alive: boolean
+          is_host: boolean
+          player_name: string
+          role: string | null
+          room_id: string
+        }
+        Insert: {
+          avatar?: string
+          created_at?: string
+          device_id: string
+          id?: string
+          is_alive?: boolean
+          is_host?: boolean
+          player_name: string
+          role?: string | null
+          room_id: string
+        }
+        Update: {
+          avatar?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          is_alive?: boolean
+          is_host?: boolean
+          player_name?: string
+          role?: string | null
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_players_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_rooms: {
+        Row: {
+          code: string
+          created_at: string
+          game_mode: string
+          game_state: Json | null
+          host_id: string
+          id: string
+          mafia_count: number
+          status: string
+          timer_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          game_mode?: string
+          game_state?: Json | null
+          host_id: string
+          id?: string
+          mafia_count?: number
+          status?: string
+          timer_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          game_mode?: string
+          game_state?: Json | null
+          host_id?: string
+          id?: string
+          mafia_count?: number
+          status?: string
+          timer_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_game_code: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
