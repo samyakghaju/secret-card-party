@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { ModeSelectScreen } from "@/components/game/ModeSelectScreen";
 import { SetupScreen } from "@/components/game/SetupScreen";
+import { LobbyScreen } from "@/components/game/LobbyScreen";
 import { RoleRevealScreen } from "@/components/game/RoleRevealScreen";
 import { NightIntro } from "@/components/game/NightIntro";
 import { NightPhase } from "@/components/game/NightPhase";
@@ -11,6 +12,7 @@ import { GameHistory } from "@/components/game/GameHistory";
 import { saveGame } from "@/lib/gameHistory";
 import { soundManager } from "@/lib/sounds";
 import { Player, GameMode, GamePhase, Role, isMafiaRole, AdvancedRole, PLAYER_AVATARS } from "@/lib/gameTypes";
+import { GamePlayer } from "@/hooks/useMultiplayer";
 
 interface NightResult {
   eliminated: string | null;
@@ -53,6 +55,52 @@ const Index = () => {
   const handleBackToModeSelect = useCallback(() => {
     setGamePhase("mode-select");
   }, []);
+
+  const handleMultiplayer = useCallback((mode: GameMode) => {
+    setGameMode(mode);
+    setGamePhase("lobby");
+  }, []);
+
+  const handleStartMultiplayerGame = useCallback((gamePlayers: GamePlayer[], numMafia: number, timerMins: number) => {
+    // Convert GamePlayer to Player with role assignment
+    let roles: Role[];
+    
+    if (gameMode === "advanced") {
+      const advancedRoles: AdvancedRole[] = [];
+      advancedRoles.push("godfather");
+      for (let i = 1; i < numMafia; i++) {
+        advancedRoles.push("mafioso");
+      }
+      advancedRoles.push("doctor");
+      advancedRoles.push("detective");
+      const remainingSlots = gamePlayers.length - advancedRoles.length;
+      for (let i = 0; i < remainingSlots; i++) {
+        advancedRoles.push("civilian");
+      }
+      roles = advancedRoles;
+    } else {
+      roles = [
+        ...Array(numMafia).fill("mafia"),
+        ...Array(gamePlayers.length - numMafia).fill("civilian"),
+      ];
+    }
+
+    const shuffledRoles = shuffleArray(roles);
+
+    const assignedPlayers: Player[] = gamePlayers.map((gp, index) => ({
+      name: gp.player_name,
+      role: shuffledRoles[index],
+      isAlive: true,
+      avatar: gp.avatar,
+    }));
+
+    setPlayers(assignedPlayers);
+    setMafiaCount(numMafia);
+    setTimerMinutes(timerMins);
+    setRoundNumber(1);
+    setNightResult(null);
+    setGamePhase("reveal");
+  }, [gameMode, shuffleArray]);
 
   const handleStartGame = useCallback((playerNames: string[], numMafia: number, timerMins: number, avatars: string[]) => {
     let roles: Role[];
@@ -217,8 +265,16 @@ const Index = () => {
         <ModeSelectScreen 
           onSelectMode={handleSelectMode} 
           onShowHistory={handleShowHistory}
+          onMultiplayer={handleMultiplayer}
           soundEnabled={soundEnabled}
           onToggleSound={handleToggleSound}
+        />
+      )}
+      {gamePhase === "lobby" && (
+        <LobbyScreen
+          gameMode={gameMode}
+          onStartGame={handleStartMultiplayerGame}
+          onBack={handleBackToModeSelect}
         />
       )}
       {gamePhase === "setup" && (

@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { History, Volume2, VolumeX, Zap, Sparkles, Shield, Search, Heart, Skull, Users } from "lucide-react";
+import { History, Volume2, VolumeX, Zap, Sparkles, Shield, Search, Heart, Skull, Users, Wifi } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
 import { GameMode } from "@/lib/gameTypes";
 
 interface ModeSelectScreenProps {
   onSelectMode: (mode: GameMode) => void;
   onShowHistory: () => void;
+  onMultiplayer: (mode: GameMode) => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
 }
@@ -13,12 +14,18 @@ interface ModeSelectScreenProps {
 export const ModeSelectScreen = ({ 
   onSelectMode, 
   onShowHistory, 
+  onMultiplayer,
   soundEnabled, 
   onToggleSound 
 }: ModeSelectScreenProps) => {
   const handleSelectMode = (mode: GameMode) => {
     soundManager.playClick();
     onSelectMode(mode);
+  };
+
+  const handleMultiplayer = (mode: GameMode) => {
+    soundManager.playClick();
+    onMultiplayer(mode);
   };
 
   return (
@@ -118,7 +125,34 @@ export const ModeSelectScreen = ({
             </div>
             <p className="text-xs mt-2 text-muted-foreground/70">Minimum 5 players • Day/Night phases</p>
           </div>
+          <div className="flex gap-2 mt-3 pt-3 border-t border-border/50">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex-1 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMultiplayer("advanced");
+              }}
+            >
+              <Wifi size={14} className="mr-1" />
+              Online
+            </Button>
+          </div>
         </button>
+
+        {/* Simple Mode - Add Online Button */}
+        <div className="flex gap-2 -mt-4 px-6">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1 text-xs"
+            onClick={() => handleMultiplayer("simple")}
+          >
+            <Wifi size={14} className="mr-1" />
+            Play Simple Online
+          </Button>
+        </div>
       </div>
     </div>
   );
