@@ -1,5 +1,5 @@
 export type GameMode = "simple" | "advanced";
-export type GamePhase = "mode-select" | "setup" | "reveal" | "night-intro" | "night" | "day" | "voting" | "complete" | "history";
+export type GamePhase = "mode-select" | "setup" | "lobby" | "reveal" | "night-intro" | "night" | "day" | "voting" | "complete" | "history";
 
 export type SimpleRole = "mafia" | "civilian";
 export type AdvancedRole = "godfather" | "mafioso" | "doctor" | "detective" | "civilian";
