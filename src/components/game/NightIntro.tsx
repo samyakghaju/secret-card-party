@@ -9,11 +9,12 @@ import { speak, cancelSpeech } from "@/lib/speech";
 interface NightIntroProps {
   onContinue: () => void;
   gameMode: GameMode;
+  isMafiaIntroOnly?: boolean;
 }
 
 type IntroStep = "countdown" | "night-falls" | "close-eyes" | "mafia-open" | "ready";
 
-export const NightIntro = ({ onContinue, gameMode }: NightIntroProps) => {
+export const NightIntro = ({ onContinue, gameMode, isMafiaIntroOnly = false }: NightIntroProps) => {
   const [step, setStep] = useState<IntroStep>("countdown");
 
   const handleCountdownComplete = useCallback(() => {
@@ -101,9 +102,11 @@ export const NightIntro = ({ onContinue, gameMode }: NightIntroProps) => {
         {step === "ready" && (
           <div className="space-y-4 animate-slide-up">
             <p className="text-sm text-muted-foreground">
-              {gameMode === "advanced" 
-                ? "Mafia members: identify each other silently, then choose your first victim"
-                : "Mafia members: identify each other silently"}
+              {isMafiaIntroOnly
+                ? "Mafia members: silently identify each other, then close your eyes"
+                : gameMode === "advanced" 
+                  ? "Mafia members: identify each other silently, then choose your first victim"
+                  : "Mafia members: identify each other silently"}
             </p>
             
             <Button
