@@ -16,6 +16,7 @@ type MultiplayerPhase =
   | "hide-phones" 
   | "role-reveal" 
   | "waiting-for-players"
+  | "mafia-intro"
   | "night-intro" 
   | "night" 
   | "day" 
@@ -103,19 +104,27 @@ export const MultiplayerGameScreen = ({
     }
   }, [gameState.phase]);
 
+  // Count mafia players
+  const mafiaCount = players.filter(p => isMafiaRole(p.role as Role)).length;
+
   // Host: Check if all players are ready and advance phase
   useEffect(() => {
     if (!isHost) return;
 
     if (gameState.phase === "waiting-for-players" && allPlayersReady) {
       // All players have seen their roles, proceed to next phase
-      if (gameMode === "advanced") {
-        updateGameState({ phase: "night-intro", playersReady: [] });
+      // If more than 1 mafia, show mafia intro so they can identify each other
+      if (mafiaCount > 1) {
+        updateGameState({ phase: "mafia-intro", playersReady: [] });
+      } else if (gameMode === "advanced") {
+        // Single mafia in advanced mode - go to day phase for discussion
+        updateGameState({ phase: "day", playersReady: [], nightResult: undefined });
       } else {
+        // Simple mode - go directly to voting
         updateGameState({ phase: "voting", playersReady: [] });
       }
     }
-  }, [isHost, gameState.phase, allPlayersReady, gameMode, updateGameState]);
+  }, [isHost, gameState.phase, allPlayersReady, gameMode, mafiaCount, updateGameState]);
 
   const handleHidePhonesComplete = useCallback(() => {
     setLocalPhase("role-reveal");
@@ -131,6 +140,17 @@ export const MultiplayerGameScreen = ({
       await updateGameState({ phase: "waiting-for-players" });
     }
   }, [isHost, markPlayerReady, updateGameState]);
+
+  const handleMafiaIntroEnd = useCallback(async () => {
+    if (isHost) {
+      // After mafia see each other, go to day phase for discussion
+      if (gameMode === "advanced") {
+        await updateGameState({ phase: "day", playersReady: [], nightResult: undefined });
+      } else {
+        await updateGameState({ phase: "voting", playersReady: [] });
+      }
+    }
+  }, [isHost, gameMode, updateGameState]);
 
   const handleNightIntroEnd = useCallback(async () => {
     if (isHost) {
@@ -273,6 +293,10 @@ export const MultiplayerGameScreen = ({
         </div>
       </div>
     );
+  }
+
+  if (localPhase === "mafia-intro") {
+    return <NightIntro onContinue={handleMafiaIntroEnd} gameMode={gameMode} isMafiaIntroOnly />;
   }
 
   if (localPhase === "night-intro") {
