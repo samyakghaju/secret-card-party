@@ -22,7 +22,7 @@ export const ImpostorCard = ({
   const [hasSeenCard, setHasSeenCard] = useState(false);
   
   const category = getCategoryById(categoryId);
-  const cardColor = isImpostor ? "330 70% 85%" : "180 70% 80%";
+  const cardColor = "180 70% 80%";
 
   const handleCardTap = () => {
     if (!isRevealed) {
