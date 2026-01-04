@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { History, Volume2, VolumeX, Zap, Sparkles, Shield, Search, Heart, Skull, Users, Wifi } from "lucide-react";
+import { History, Volume2, VolumeX, Zap, Sparkles, Shield, Search, Heart, Skull, Users, Wifi, UserX } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
 import { GameMode } from "@/lib/gameTypes";
+import { useNavigate } from "react-router-dom";
 
 interface ModeSelectScreenProps {
   onSelectMode: (mode: GameMode) => void;
@@ -18,6 +19,8 @@ export const ModeSelectScreen = ({
   soundEnabled, 
   onToggleSound 
 }: ModeSelectScreenProps) => {
+  const navigate = useNavigate();
+
   const handleSelectMode = (mode: GameMode) => {
     soundManager.playClick();
     onSelectMode(mode);
@@ -26,6 +29,11 @@ export const ModeSelectScreen = ({
   const handleMultiplayer = (mode: GameMode) => {
     soundManager.playClick();
     onMultiplayer(mode);
+  };
+
+  const handleImpostorGame = () => {
+    soundManager.playClick();
+    navigate("/impostor");
   };
 
   return (
@@ -153,6 +161,34 @@ export const ModeSelectScreen = ({
             Play Simple Online
           </Button>
         </div>
+
+        {/* Impostor Game Card */}
+        <button
+          onClick={handleImpostorGame}
+          className="w-full p-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-pink-500/20 border-2 border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300 text-left animate-slide-up group"
+          style={{ animationDelay: "0.3s" }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/30 to-pink-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <UserX size={24} className="text-cyan-400" />
+            </div>
+            <div>
+              <h3 className="font-display text-xl font-bold text-foreground">Impostor Who?</h3>
+              <p className="text-xs text-muted-foreground">Bluffing & Guessing</p>
+            </div>
+          </div>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Users size={14} className="text-cyan-400" />
+              <span>One device, pass-and-play</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Search size={14} className="text-pink-400" />
+              <span>Find the fake among your friends</span>
+            </div>
+            <p className="text-xs mt-2 text-muted-foreground/70">3-12 players • Category word game</p>
+          </div>
+        </button>
       </div>
     </div>
   );
