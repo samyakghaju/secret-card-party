@@ -182,14 +182,19 @@ export const MultiplayerVotingPhase = ({
           </div>
         </div>
 
-        {isHost && (
-          <div className="pt-6">
+        <div className="pt-6">
+          {isHost ? (
             <Button variant="mafia" size="xl" onClick={handleRevealComplete} className="w-full">
               <Moon size={20} />
               Continue
             </Button>
-          </div>
-        )}
+          ) : (
+            <div className="text-center">
+              <Loader2 size={24} className="mx-auto text-primary animate-spin mb-2" />
+              <p className="text-muted-foreground">Waiting for host to continue...</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
