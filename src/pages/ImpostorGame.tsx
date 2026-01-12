@@ -17,6 +17,7 @@ const ImpostorGame = () => {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [impostorIndex, setImpostorIndex] = useState(0);
   const [secretWord, setSecretWord] = useState("");
+  const [impostorHint, setImpostorHint] = useState("");
 
   const handleClose = () => {
     navigate("/");
@@ -40,8 +41,9 @@ const ImpostorGame = () => {
     setImpostorIndex(randomImpostor);
     
     // Pick random word from category
-    const word = getRandomWord(selectedCategory);
-    setSecretWord(word);
+    const wordData = getRandomWord(selectedCategory);
+    setSecretWord(wordData.word);
+    setImpostorHint(wordData.hint);
     
     // Reset to first player
     setCurrentPlayerIndex(0);
@@ -107,6 +109,7 @@ const ImpostorGame = () => {
             playerName={players[currentPlayerIndex]}
             isImpostor={currentPlayerIndex === impostorIndex}
             secretWord={secretWord}
+            impostorHint={impostorHint}
             categoryId={selectedCategory}
             onNext={handleNextPlayer}
             isLastPlayer={currentPlayerIndex === players.length - 1}
