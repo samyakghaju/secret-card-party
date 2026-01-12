@@ -337,6 +337,7 @@ export const MultiplayerGameScreen = ({
         allPlayers={players}
         hasVoted={hasVoted || false}
         isHost={isHost}
+        roundNumber={gameState.roundNumber || 1}
         onVoteSubmit={handleVoteSubmit}
         onVoteComplete={handleVoteComplete}
       />

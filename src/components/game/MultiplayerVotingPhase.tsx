@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Vote, Check, AlertCircle, Loader2, Skull, X, Moon } from "lucide-react";
 import { soundManager } from "@/lib/sounds";
@@ -14,6 +14,7 @@ interface MultiplayerVotingPhaseProps {
   allPlayers: GamePlayer[];
   hasVoted: boolean;
   isHost: boolean;
+  roundNumber: number;
   onVoteSubmit: (vote: string | null) => void;
   onVoteComplete: (eliminatedPlayer: string | null) => void;
 }
@@ -28,12 +29,20 @@ export const MultiplayerVotingPhase = ({
   allPlayers,
   hasVoted,
   isHost,
+  roundNumber,
   onVoteSubmit,
   onVoteComplete,
 }: MultiplayerVotingPhaseProps) => {
   const [step, setStep] = useState<VotingStep>(hasVoted ? "waiting" : "voting");
   const [selectedVote, setSelectedVote] = useState<string | null>(null);
   const [eliminatedPlayer, setEliminatedPlayer] = useState<Player | null>(null);
+
+  // Reset state when round changes (new voting phase)
+  useEffect(() => {
+    setStep(hasVoted ? "waiting" : "voting");
+    setSelectedVote(null);
+    setEliminatedPlayer(null);
+  }, [roundNumber, hasVoted]);
 
   const alivePlayers = players.filter((p) => p.isAlive);
   const allVoted = playersReady.length >= alivePlayers.length;
