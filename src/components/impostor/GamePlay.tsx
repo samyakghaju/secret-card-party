@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { RotateCcw, Users, Eye, Vote, Skull, Check, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { RotateCcw, Users, Eye, Vote, Skull, Check, X, Trophy } from "lucide-react";
 
 interface GamePlayProps {
   players: string[];
@@ -11,6 +11,8 @@ interface GamePlayProps {
   onPlayAgain: () => void;
   onNewGame: () => void;
 }
+
+type GameResult = "playing" | "impostor_wins" | "civilians_win";
 
 export const GamePlay = ({
   players,
@@ -26,43 +28,66 @@ export const GamePlay = ({
   const [showWord, setShowWord] = useState(false);
   const [votingMode, setVotingMode] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
-  const [confirmVote, setConfirmVote] = useState(false);
+  const [showVoteResult, setShowVoteResult] = useState(false);
+  const [lastVotedPlayer, setLastVotedPlayer] = useState<string | null>(null);
 
-  const alivePlayers = players.filter(p => !eliminatedPlayers.includes(p));
   const impostorName = players[impostorIndex];
+  const alivePlayers = players.filter(p => !eliminatedPlayers.includes(p));
   const impostorEliminated = eliminatedPlayers.includes(impostorName);
-  const gameOver = impostorEliminated || alivePlayers.length <= 2;
+  
+  // Count alive civilians (everyone except impostor)
+  const aliveCivilians = alivePlayers.filter(p => p !== impostorName).length;
+  const aliveImpostors = impostorEliminated ? 0 : 1;
+
+  // Determine game result
+  const getGameResult = (): GameResult => {
+    if (impostorEliminated) {
+      return "civilians_win";
+    }
+    // Impostor wins if impostor count >= civilian count
+    if (aliveImpostors >= aliveCivilians) {
+      return "impostor_wins";
+    }
+    return "playing";
+  };
+
+  const gameResult = getGameResult();
 
   const handleVote = (player: string) => {
     setSelectedPlayer(player);
-    setConfirmVote(true);
   };
 
   const handleConfirmVote = () => {
     if (selectedPlayer) {
+      setLastVotedPlayer(selectedPlayer);
       onEliminatePlayer(selectedPlayer);
+      setShowVoteResult(true);
       setSelectedPlayer(null);
-      setConfirmVote(false);
       setVotingMode(false);
     }
   };
 
   const handleCancelVote = () => {
     setSelectedPlayer(null);
-    setConfirmVote(false);
   };
 
-  // Vote confirmation screen
-  if (confirmVote && selectedPlayer) {
-    const isImpostor = selectedPlayer === impostorName;
+  const handleContinueAfterVote = () => {
+    setShowVoteResult(false);
+    setLastVotedPlayer(null);
+  };
+
+  // Vote result screen (shown after voting)
+  if (showVoteResult && lastVotedPlayer) {
+    const wasImpostor = lastVotedPlayer === impostorName;
+    
     return (
       <div className="flex flex-col h-full p-4">
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="text-center space-y-6 animate-slide-up">
             <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center ${
-              isImpostor ? 'bg-green-500/20' : 'bg-red-500/20'
+              wasImpostor ? 'bg-green-500/20' : 'bg-red-500/20'
             }`}>
-              {isImpostor ? (
+              {wasImpostor ? (
                 <Check size={48} className="text-green-500" />
               ) : (
                 <X size={48} className="text-red-500" />
@@ -71,17 +96,17 @@ export const GamePlay = ({
             
             <div>
               <h2 className="font-display text-2xl font-bold text-ink mb-2">
-                {selectedPlayer}
+                {lastVotedPlayer}
               </h2>
               <p className={`text-xl font-display ${
-                isImpostor ? 'text-green-500' : 'text-red-500'
+                wasImpostor ? 'text-green-500' : 'text-red-500'
               }`}>
-                {isImpostor ? "WAS THE IMPOSTOR!" : "was NOT the impostor"}
+                {wasImpostor ? "WAS THE IMPOSTOR!" : "was NOT the impostor"}
               </p>
             </div>
             
             <p className="text-ink/60">
-              {isImpostor 
+              {wasImpostor 
                 ? "Congratulations! You found the impostor!"
                 : "An innocent player was eliminated..."}
             </p>
@@ -90,10 +115,49 @@ export const GamePlay = ({
 
         <div className="space-y-2 mt-6">
           <button
-            onClick={handleConfirmVote}
+            onClick={handleContinueAfterVote}
             className="w-full py-4 rounded-full bg-ink text-paper font-semibold text-lg"
           >
             Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Voting confirmation modal
+  if (selectedPlayer) {
+    return (
+      <div className="flex flex-col h-full p-4">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="text-center space-y-6 animate-slide-up">
+            <div className="w-24 h-24 mx-auto rounded-full flex items-center justify-center bg-amber-500/20">
+              <Vote size={48} className="text-amber-500" />
+            </div>
+            
+            <div>
+              <h2 className="font-display text-2xl font-bold text-ink mb-2">
+                Vote for {selectedPlayer}?
+              </h2>
+              <p className="text-ink/60">
+                Are you sure you want to eliminate this player?
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2 mt-6">
+          <button
+            onClick={handleConfirmVote}
+            className="w-full py-4 rounded-full bg-red-500 text-white font-semibold text-lg"
+          >
+            Confirm Elimination
+          </button>
+          <button
+            onClick={handleCancelVote}
+            className="w-full py-3 rounded-full bg-transparent text-ink/60 font-medium hover:text-ink transition-colors"
+          >
+            Cancel
           </button>
         </div>
       </div>
@@ -140,30 +204,22 @@ export const GamePlay = ({
     );
   }
 
-  // Game over screen
-  if (gameOver) {
+  // Game over - Civilians win
+  if (gameResult === "civilians_win") {
     return (
       <div className="flex flex-col h-full p-4">
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="text-center space-y-6 animate-slide-up">
-            <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center ${
-              impostorEliminated ? 'bg-green-500/20' : 'bg-red-500/20'
-            }`}>
-              {impostorEliminated ? (
-                <Check size={48} className="text-green-500" />
-              ) : (
-                <Skull size={48} className="text-red-500" />
-              )}
+            <div className="w-24 h-24 mx-auto rounded-full flex items-center justify-center bg-green-500/20">
+              <Trophy size={48} className="text-green-500" />
             </div>
             
             <div>
-              <h2 className="font-display text-2xl font-bold text-ink mb-2">
-                {impostorEliminated ? "Town Wins!" : "Impostor Wins!"}
+              <h2 className="font-display text-3xl font-bold text-green-600 mb-2">
+                🎉 Civilians Win! 🎉
               </h2>
-              <p className="text-ink/60">
-                {impostorEliminated 
-                  ? "The impostor has been found!"
-                  : "The impostor remained hidden!"}
+              <p className="text-ink/60 text-lg">
+                The impostor has been found and eliminated!
               </p>
             </div>
 
@@ -197,6 +253,76 @@ export const GamePlay = ({
                   }`}
                 >
                   {player} {player === impostorName && "(Impostor)"}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <button
+            onClick={onPlayAgain}
+            className="w-full py-4 rounded-full bg-ink text-paper font-semibold text-lg flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="w-5 h-5" />
+            Play Again
+          </button>
+          <button
+            onClick={onNewGame}
+            className="w-full py-3 rounded-full bg-transparent text-ink/60 font-medium hover:text-ink transition-colors"
+          >
+            New Game
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Game over - Impostor wins
+  if (gameResult === "impostor_wins") {
+    return (
+      <div className="flex flex-col h-full p-4">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="text-center space-y-6 animate-slide-up">
+            <div className="w-24 h-24 mx-auto rounded-full flex items-center justify-center bg-red-500/20">
+              <Skull size={48} className="text-red-500" />
+            </div>
+            
+            <div>
+              <h2 className="font-display text-3xl font-bold text-red-600 mb-2">
+                😈 Impostor Wins! 😈
+              </h2>
+              <p className="text-ink/60 text-lg">
+                The impostor remained hidden and took over!
+              </p>
+            </div>
+
+            <div className="bg-white/50 rounded-2xl p-4">
+              <p className="text-ink/60 text-sm mb-2">The Impostor was</p>
+              <p className="font-bold text-red-500 text-xl">{impostorName}</p>
+            </div>
+
+            <div className="bg-white/50 rounded-2xl p-4">
+              <p className="text-ink/60 text-sm mb-2">The Secret Word was</p>
+              <p className="font-bold text-ink text-xl">{secretWord}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Eliminated players */}
+        {eliminatedPlayers.length > 0 && (
+          <div className="bg-red-50 rounded-2xl p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Skull className="w-4 h-4 text-red-500" />
+              <span className="text-red-500 text-sm font-medium">Eliminated</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {eliminatedPlayers.map((player) => (
+                <span
+                  key={player}
+                  className="px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-700"
+                >
+                  {player}
                 </span>
               ))}
             </div>
