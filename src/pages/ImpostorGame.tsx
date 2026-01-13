@@ -18,6 +18,7 @@ const ImpostorGame = () => {
   const [impostorIndex, setImpostorIndex] = useState(0);
   const [secretWord, setSecretWord] = useState("");
   const [impostorHint, setImpostorHint] = useState("");
+  const [eliminatedPlayers, setEliminatedPlayers] = useState<string[]>([]);
 
   const handleClose = () => {
     navigate("/");
@@ -45,6 +46,9 @@ const ImpostorGame = () => {
     setSecretWord(wordData.word);
     setImpostorHint(wordData.hint);
     
+    // Reset eliminated players
+    setEliminatedPlayers([]);
+    
     // Reset to first player
     setCurrentPlayerIndex(0);
     setPhase("reveal");
@@ -62,6 +66,10 @@ const ImpostorGame = () => {
     }
   };
 
+  const handleEliminatePlayer = (playerName: string) => {
+    setEliminatedPlayers(prev => [...prev, playerName]);
+  };
+
   const handlePlayAgain = () => {
     initializeGame();
   };
@@ -73,6 +81,7 @@ const ImpostorGame = () => {
     setCurrentPlayerIndex(0);
     setImpostorIndex(0);
     setSecretWord("");
+    setEliminatedPlayers([]);
   };
 
   const category = selectedCategory ? getCategoryById(selectedCategory) : null;
@@ -122,6 +131,8 @@ const ImpostorGame = () => {
             impostorIndex={impostorIndex}
             secretWord={secretWord}
             categoryName={category.name}
+            eliminatedPlayers={eliminatedPlayers}
+            onEliminatePlayer={handleEliminatePlayer}
             onPlayAgain={handlePlayAgain}
             onNewGame={handleNewGame}
           />
