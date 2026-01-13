@@ -5,6 +5,7 @@ interface ImpostorCardProps {
   playerName: string;
   isImpostor: boolean;
   secretWord: string;
+  impostorHint: string;
   categoryId: string;
   onNext: () => void;
   isLastPlayer: boolean;
@@ -14,6 +15,7 @@ export const ImpostorCard = ({
   playerName,
   isImpostor,
   secretWord,
+  impostorHint,
   categoryId,
   onNext,
   isLastPlayer
@@ -60,6 +62,11 @@ export const ImpostorCard = ({
               }`}>
                 {isImpostor ? "YOU ARE THE IMPOSTER!" : secretWord}
               </p>
+              {isImpostor && impostorHint && (
+                <p className="text-ink/60 text-sm text-center mt-2">
+                  Hint: {impostorHint}
+                </p>
+              )}
             </div>
           ) : (
             <div className="text-center">
